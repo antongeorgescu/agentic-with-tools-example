@@ -14,12 +14,14 @@ This Flask API provides an endpoint to generate question/answer pairs.
 # nosec
 
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 from typing import List, Dict
 
 import chat_tools
 import generate_chats
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 @app.route('/run_new_caller/tool_list', methods=['GET'])
 def get_tool_list():
