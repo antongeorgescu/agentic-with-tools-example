@@ -1,0 +1,88 @@
+<div class="app-container">
+  <header class="app-header">
+    <h1>{{ title }}</h1>
+    <button 
+      class="run-button" 
+      (click)="onRunClick()" 
+      [disabled]="isLoading">
+      {{ isLoading ? 'Loading...' : 'Run' }}
+    </button>
+  </header>
+
+  <div class="error-message" *ngIf="error">
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- Top Layer: Q&A Pair -->
+  <section class="qa-section">
+    <h2>Question & Answer</h2>
+    <div class="qa-container">
+      <div class="qa-item">
+        <label for="question">Question:</label>
+        <textarea 
+          id="question"
+          class="qa-textbox"
+          [value]="currentQAPair.question"
+          readonly>
+        </textarea>
+      </div>
+      <div class="qa-item">
+        <label for="answer">Answer:</label>
+        <textarea 
+          id="answer"
+          class="qa-textbox"
+          [value]="currentQAPair.answer"
+          readonly>
+        </textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- Middle Layer: Topics List -->
+  <section class="topics-section">
+    <h2>Available Topics</h2>
+    <div class="topics-container">
+      <div class="topics-grid">
+        <div 
+          class="topic-item"
+          *ngFor="let topic of topics; let i = index">
+          <span class="topic-number">{{ i + 1 }}</span>
+          <span class="topic-text">{{ topic }}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Bottom Layer: Tools Used -->
+  <section class="tools-section">
+    <h2>Tools Used</h2>
+    <div class="tools-container">
+      <div class="tools-list" *ngIf="toolsUsed.length > 0; else noToolsUsed">
+        <div 
+          class="tool-item"
+          *ngFor="let toolName of toolsUsed">
+          <div class="tool-name">{{ toolName }}</div>
+          <div class="tool-description">{{ getToolDescription(toolName) }}</div>
+        </div>
+      </div>
+      <ng-template #noToolsUsed>
+        <p class="no-tools">No tools used in current generation</p>
+      </ng-template>
+    </div>
+  </section>
+
+  <!-- All Available Tools (for reference) -->
+  <section class="all-tools-section">
+    <h2>All Available Tools</h2>
+    <div class="all-tools-container">
+      <div class="all-tools-grid">
+        <div 
+          class="all-tool-item"
+          *ngFor="let tool of tools">
+          <div class="all-tool-name">{{ tool.name }}</div>
+          <div class="all-tool-description">{{ tool.description }}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
