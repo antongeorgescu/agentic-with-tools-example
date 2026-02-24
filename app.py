@@ -18,7 +18,6 @@ from typing import List, Dict
 
 import chat_tools
 import generate_chats
-import chat_tools
 
 app = Flask(__name__)
 
@@ -32,6 +31,17 @@ def get_tool_list():
     """
     tools = chat_tools.get_available_tools()
     return jsonify({"tools": tools})
+
+@app.route('/run_new_caller/topics_list', methods=['GET'])
+def get_topics_list():
+    """
+    Get the list of topics used to generate user queries.
+    
+    Returns:
+        JSON response with array of available topics
+    """
+    topics = generate_chats.get_topics_list()
+    return jsonify({"topics": topics})
 
 @app.route('/run_new_caller/<int:npairs>', methods=['GET'])
 def run_new_caller(npairs: int):
@@ -100,6 +110,8 @@ def home():
     return jsonify({
         "message": "Chat Q&A Pairs Generation API",
         "endpoints": {
+            "GET /run_new_caller/tool_list": "Get list of available tools with descriptions",
+            "GET /run_new_caller/topics_list": "Get list of topics used for question generation",
             "GET /run_new_caller/<npairs>": "Generate npairs question/answer pairs via URL parameter",
             "POST /run_new_caller": "Generate question/answer pairs via JSON body {'npairs': <int>}",
             "GET /": "This documentation"
@@ -124,10 +136,13 @@ if __name__ == '__main__':
     print("Starting Flask API server...")
     print("Available endpoints:")
     print("  GET  /run_new_caller/tool_list")
+    print("  GET  /run_new_caller/topics_list")
     print("  GET  /run_new_caller/<npairs>")
     # print("  POST /run_new_caller")
     print("  GET  /")
     print("\nExample usage:")
+    print("  GET  http://localhost:5000/run_new_caller/tool_list")
+    print("  GET  http://localhost:5000/run_new_caller/topics_list")
     print("  GET  http://localhost:5000/run_new_caller/5")
     print("  POST http://localhost:5000/run_new_caller")
     print("       Body: {'npairs': 10}")

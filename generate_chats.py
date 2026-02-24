@@ -269,6 +269,15 @@ Format your response as JSON:
             print(f"\nQ&A pairs and tool summary saved to: {filename}")
         except Exception as e:
             print(f"Error saving to file: {e}")
+    
+    def get_topics_list(self) -> List[str]:
+        """
+        Get the full list of topics used for question generation.
+        
+        Returns:
+            List[str]: List of all available topics for Q&A generation
+        """
+        return self.topics.copy()  # Return a copy to prevent external modification
 
 
 def get_tools_used(result: Dict[str, Any]) -> set:
@@ -369,3 +378,15 @@ def request_for_generate_qa_pairs(npairs: int):
     result = generator.generate_qa_pairs(npairs, "gpt-35-turbo")
     
     return result
+
+
+def get_topics_list() -> List[str]:
+    """
+    Get the full list of topics used for question generation.
+    
+    Returns:
+        List[str]: List of all available topics for Q&A generation
+    """
+    topics_file = "topics.json"
+    generator = ChatGenerator(topics_file)
+    return generator.get_topics_list()
