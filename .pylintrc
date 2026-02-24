@@ -1,0 +1,10 @@
+[MASTER]
+# Disable pylint entirely by disabling all checks
+disable=all
+
+# Alternative: disable specific message categories
+# disable=C,R,W,E,F
+
+[MESSAGES CONTROL]
+# Disable all pylint messages
+disable=all

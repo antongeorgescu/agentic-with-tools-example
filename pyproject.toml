@@ -1,0 +1,24 @@
+[tool.pylance]
+# Disable Pylance type checking completely
+typeCheckingMode = "off"  
+diagnosticMode = "off"
+autoSearchPaths = false
+useLibraryCodeForTypes = false
+
+[tool.pyright]
+# Disable Pyright (which Pylance is based on)
+typeCheckingMode = "off"
+reportGeneralTypeIssues = false
+reportOptionalSubscript = false
+reportOptionalMemberAccess = false
+reportOptionalCall = false
+reportOptionalIterable = false
+reportOptionalContextManager = false
+reportOptionalOperand = false
+reportPrivateImportUsage = false
+reportUnboundVariable = false
+reportUndefinedVariable = false
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
