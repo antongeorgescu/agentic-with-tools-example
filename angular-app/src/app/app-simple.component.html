@@ -1,0 +1,17 @@
+<div class="app-container">
+  <h1>{{ title }}</h1>
+  <p>Angular app is running!</p>
+  
+  <div *ngIf="error" class="error-message">
+    Error: {{ error }}
+  </div>
+  
+  <button (click)="onRunClick()">Test Button</button>
+  
+  <div>
+    <h3>Debug Info:</h3>
+    <p>Topics count: {{ topics.length }}</p>
+    <p>Tools count: {{ tools.length }}</p>
+    <p>Loading: {{ isLoading }}</p>
+  </div>
+</div>

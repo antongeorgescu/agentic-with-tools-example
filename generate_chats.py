@@ -107,8 +107,7 @@ class ChatGenerator:
             qa_pair["tool_used"] = f"(function) {tool_used}"
             qa_pair["parameters"] = result['parameters']
             qa_pair["description"] = result['tool_description']
-            qa_pair["answer"] = result['response']
-            
+                        
             # Track tools used
             tools_used.add(tool_used)
             tool_usage_count[tool_used] = tool_usage_count.get(tool_used, 0) + 1

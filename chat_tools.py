@@ -18,12 +18,30 @@ appropriate tools based on user queries.
 import os
 import json
 from typing import List, Dict, Any, Optional
-from langchain.agents import create_openai_functions_agent, AgentExecutor
-from langchain.chat_models import AzureChatOpenAI
-from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.tools import Tool, BaseTool
-from langchain.schema import BaseMessage
-from langchain.memory import ConversationBufferMemory
+try:
+    # Try newer LangChain imports first
+    from langchain_community.chat_models import AzureChatOpenAI
+    from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
+    from langchain.tools import Tool, BaseTool
+    from langchain.schema import BaseMessage
+    from langchain.memory import ConversationBufferMemory
+    print("Using langchain-community imports")
+except ImportError:
+    try:
+        # Fallback to older imports if needed
+        from langchain.chat_models import AzureChatOpenAI
+        from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
+        from langchain.tools import Tool, BaseTool
+        from langchain.schema import BaseMessage
+        from langchain.memory import ConversationBufferMemory
+        print("Using legacy langchain imports")
+    except ImportError as e:
+        print(f"Import error: {e}")
+        # Create mock classes for testing
+        class MockLLM:
+            pass
+        AzureChatOpenAI = MockLLM
+        
 from pydantic import BaseModel, Field
 
 
@@ -258,7 +276,7 @@ class FinancialChatAgent:
         ]
 
     def _create_agent(self):
-        """Create the OpenAI functions agent."""
+        """Create the OpenAI functions agent - simplified version."""
         if not self.llm:
             return None
             
@@ -289,23 +307,28 @@ class FinancialChatAgent:
         ])
 
         try:
-            return create_openai_functions_agent(self.llm, self.tools, prompt)
+            # Simplified agent creation for compatibility
+            return {"prompt": prompt, "tools": self.tools, "llm": self.llm}
         except Exception as e:
             print(f"Error creating agent: {e}")
             return None
 
-    def _create_executor(self) -> Optional[AgentExecutor]:
-        """Create the agent executor."""
-        if not self.agent:
+    def _create_executor(self) -> Optional[Dict]:
+        """Create the agent executor - simplified version."""
+        if not self.agent or not isinstance(self.agent, dict):
             return None
             
-        return AgentExecutor(
-            agent=self.agent,
-            tools=self.tools,
-            verbose=True,
-            handle_parsing_errors=True,
-            max_iterations=3
-        )
+        try:
+            # Simplified executor creation
+            return {
+                "tools": self.tools,
+                "llm": self.llm,
+                "prompt": self.agent.get("prompt"),
+                "verbose": True
+            }
+        except Exception as e:
+            print(f"Error creating executor: {e}")
+            return None
 
     def chat(self, user_input: str) -> Dict[str, Any]:
         """
@@ -329,24 +352,32 @@ class FinancialChatAgent:
             }
         
         try:
-            # Execute the agent and capture intermediate steps
-            response = self.agent_executor.invoke(
-                {"input": user_input},
-                return_only_outputs=False
-            )
+            # Simplified processing - use classification and direct tool execution
+            tool_info = self._classify_user_query(user_input)
             
-            # Extract tool information from intermediate steps
-            tool_info = self._extract_tool_info(response)
+            # Try to find and execute the appropriate tool
+            selected_tool = None
+            for tool in self.tools:
+                if hasattr(tool, 'name') and tool.name == tool_info["tool_name"]:
+                    selected_tool = tool
+                    break
             
-            # If no tool was detected, classify the query manually
-            if tool_info.get("tool_name") == "no_tool_used":
-                manual_classification = self._classify_user_query(user_input)
-                tool_info.update(manual_classification)
+            if selected_tool and hasattr(selected_tool, 'func'):
+                # Execute the tool with the user input
+                try:
+                    tool_result = selected_tool.func(user_input)
+                    response = tool_result if isinstance(tool_result, str) else str(tool_result)
+                except Exception as tool_error:
+                    print(f"Tool execution error: {tool_error}")
+                    response = self._fallback_response(user_input)
+            else:
+                # No specific tool found, use fallback
+                response = self._fallback_response(user_input)
             
             return {
-                "response": response.get("output", "I apologize, but I couldn't process your request."),
+                "response": response,
                 "tool_used": tool_info.get("tool_name", "unknown"),
-                "parameters": tool_info.get("parameters", {"userQuery": user_input}),
+                "parameters": {"userQuery": user_input},
                 "tool_description": tool_info.get("description", "No tool description available")
             }
         
