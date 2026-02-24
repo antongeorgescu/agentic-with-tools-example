@@ -23,21 +23,37 @@ def test_get_endpoint():
     else:
         print(f"❌ Error: {response.status_code} - {response.text}")
 
-def test_post_endpoint():
-    """Test POST endpoint with JSON body."""
-    print("\nTesting POST /run_new_caller...")
+# def test_post_endpoint():
+#     """Test POST endpoint with JSON body."""
+#     print("\nTesting POST /run_new_caller...")
     
-    # Test with 3 pairs
-    payload = {"npairs": 3}
-    headers = {"Content-Type": "application/json"}
+#     # Test with 3 pairs
+#     payload = {"npairs": 3}
+#     headers = {"Content-Type": "application/json"}
     
-    response = requests.post(f"{BASE_URL}/run_new_caller", 
-                           json=payload, headers=headers)
+#     response = requests.post(f"{BASE_URL}/run_new_caller", 
+#                            json=payload, headers=headers)
+    
+#     if response.status_code == 200:
+#         data = response.json()
+#         print(f"✅ Success: Got {data['count']} pairs")
+#         print(f"All pairs: {json.dumps(data['qa_pairs'], indent=2)}")
+#     else:
+#         print(f"❌ Error: {response.status_code} - {response.text}")
+
+def test_tool_list_endpoint():
+    """Test tool list endpoint."""
+    print("\nTesting GET /run_new_caller/tool_list...")
+    
+    response = requests.get(f"{BASE_URL}/run_new_caller/tool_list")
     
     if response.status_code == 200:
         data = response.json()
-        print(f"✅ Success: Got {data['count']} pairs")
-        print(f"All pairs: {json.dumps(data['qa_pairs'], indent=2)}")
+        print("✅ Success: Tool list retrieved")
+        tools = data.get('tools', [])
+        print(f"Available tools count: {len(tools)}")
+        if tools:
+            print(f"Sample tools: {tools[:3]}...")  # Show first 3 tools
     else:
         print(f"❌ Error: {response.status_code} - {response.text}")
 
@@ -78,8 +94,9 @@ if __name__ == "__main__":
     
     try:
         test_home_endpoint()
+        test_tool_list_endpoint()
         test_get_endpoint()
-        test_post_endpoint()
+        # test_post_endpoint()
         test_error_cases()
         print("\n🎉 All tests completed!")
         

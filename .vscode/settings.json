@@ -1,0 +1,52 @@
+{
+    // Disable Pylint but keep Python functionality
+    "python.linting.enabled": false,
+    "python.linting.pylintEnabled": false,
+    "pylint.enabled": false,
+    
+    // Keep Pylance but disable warnings - REQUIRED FOR DEBUGGING
+    "python.analysis.typeCheckingMode": "off",
+    "python.languageServer": "Pylance",
+    "python.defaultInterpreterPath": "./venv/Scripts/python.exe",
+    
+    // Disable Pylance diagnostics but keep core functionality
+    "python.analysis.diagnosticMode": "openFilesOnly",
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.autoSearchPaths": true,
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportGeneralTypeIssues": "none",
+        "reportOptionalSubscript": "none", 
+        "reportOptionalMemberAccess": "none",
+        "reportOptionalCall": "none",
+        "reportOptionalIterable": "none",
+        "reportOptionalContextManager": "none",
+        "reportOptionalOperand": "none",
+        "reportTypedDictNotRequiredAccess": "none",
+        "reportPrivateImportUsage": "none",
+        "reportUnboundVariable": "none",
+        "reportUndefinedVariable": "none",
+        "reportAssertAlwaysTrue": "none",
+        "reportSelfClsParameterName": "none",
+        "reportImplicitStringConcatenation": "none",
+        "reportUnnecessaryTypeIgnoreComment": "none",
+        "reportMatchNotExhaustive": "none",
+        "reportMissingImports": "none",
+        "reportMissingModuleSource": "none"
+    },
+    
+    // Keep debugging functionality enabled
+    "python.debugging.enabled": true,
+    "python.terminal.activateEnvironment": true,
+    
+    // Disable GitHub Copilot security warnings but keep core features
+    "github.copilot.enable": {
+        "*": true
+    },
+    
+    // Disable security warnings in problems panel
+    "problems.decorations.enabled": true,
+    "problems.showCurrentInStatus": false,
+    
+    // Keep essential Python features for debugging
+    "python.showStartPage": false
+}

@@ -588,6 +588,23 @@ def get_tool(user_query: str) -> str:
     response = chat_with_agent(user_query)
     return response
 
+
+def get_available_tools() -> List[Dict[str, str]]:
+    """
+    Get list of all available tools with their descriptions.
+    
+    Returns:
+        List[Dict[str, str]]: List of dictionaries containing tool name and description
+    """
+    agent = get_agent()
+    return [
+        {
+            "name": tool.name,
+            "description": tool.description
+        }
+        for tool in agent.tools
+    ]
+
 # Example usage and testing
 if __name__ == "__main__":
     print("🤖 Financial Chat Agent with LangChain Tools")

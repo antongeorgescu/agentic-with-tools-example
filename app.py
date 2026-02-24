@@ -16,9 +16,22 @@ This Flask API provides an endpoint to generate question/answer pairs.
 from flask import Flask, jsonify, request
 from typing import List, Dict
 
+import chat_tools
 import generate_chats
+import chat_tools
 
 app = Flask(__name__)
+
+@app.route('/run_new_caller/tool_list', methods=['GET'])
+def get_tool_list():
+    """
+    Get the list of available tools.
+    
+    Returns:
+        JSON response with array of available tools
+    """
+    tools = chat_tools.get_available_tools()
+    return jsonify({"tools": tools})
 
 @app.route('/run_new_caller/<int:npairs>', methods=['GET'])
 def run_new_caller(npairs: int):
@@ -61,25 +74,25 @@ def run_new_caller(npairs: int):
         "result": qa_pairs
     })
 
-@app.route('/run_new_caller', methods=['POST'])
-def run_new_caller_post():
-    """
-    Alternative POST endpoint that accepts npairs in request body.
+# @app.route('/run_new_caller', methods=['POST'])
+# def run_new_caller_post():
+#     """
+#     Alternative POST endpoint that accepts npairs in request body.
     
-    Expected JSON body: {"npairs": <integer>}
-    """
-    try:
-        data = request.get_json()
-        if not data or 'npairs' not in data:
-            return jsonify({"error": "Missing 'npairs' in request body"}), 400
+#     Expected JSON body: {"npairs": <integer>}
+#     """
+#     try:
+#         data = request.get_json()
+#         if not data or 'npairs' not in data:
+#             return jsonify({"error": "Missing 'npairs' in request body"}), 400
         
-        npairs = int(data['npairs'])
-        return run_new_caller(npairs)
+#         npairs = int(data['npairs'])
+#         return run_new_caller(npairs)
         
-    except (ValueError, TypeError):
-        return jsonify({"error": "npairs must be a valid integer"}), 400
-    except Exception as e:
-        return jsonify({"error": f"Server error: {str(e)}"}), 500
+#     except (ValueError, TypeError):
+#         return jsonify({"error": "npairs must be a valid integer"}), 400
+#     except Exception as e:
+#         return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 @app.route('/', methods=['GET'])
 def home():
@@ -110,8 +123,9 @@ def internal_error(error):
 if __name__ == '__main__':
     print("Starting Flask API server...")
     print("Available endpoints:")
+    print("  GET  /run_new_caller/tool_list")
     print("  GET  /run_new_caller/<npairs>")
-    print("  POST /run_new_caller")
+    # print("  POST /run_new_caller")
     print("  GET  /")
     print("\nExample usage:")
     print("  GET  http://localhost:5000/run_new_caller/5")
