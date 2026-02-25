@@ -44,7 +44,11 @@ import { FormsModule } from '@angular/forms';
               </div>
               <div class="answer-section">
                 <label>Answer:</label>
-                <textarea readonly class="answer-box">{{ qa.answer }}</textarea>
+                <div class="answer-display">
+                  <ng-container *ngFor="let answerPart of getAnswerParts(qa.answer)">
+                    <span [class]="answerPart.isAccountInfo ? 'account-info-text' : 'regular-text'">{{ answerPart.text }}</span>
+                  </ng-container>
+                </div>
               </div>
               <div class="tool-info" *ngIf="qa.tool_used">
                 <div class="tool-details">
@@ -224,9 +228,10 @@ import { FormsModule } from '@angular/forms';
       border: 1px solid #ced4da;
       border-radius: 4px;
       resize: vertical;
-      min-height: 80px;
+      min-height: 120px;
       background: white;
       font-family: inherit;
+      font-size: 14px;
     }
     
     .question-box {
@@ -236,7 +241,29 @@ import { FormsModule } from '@angular/forms';
     .answer-box {
       border-left: 4px solid #28a745;
     }
-    
+
+    .answer-display {
+      padding: 10px;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      min-height: 120px;
+      background: white;
+      font-family: inherit;
+      font-size: 14px;
+      border-left: 4px solid #28a745;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .account-info-text {
+      color: #007bff;
+      font-weight: 600;
+    }
+
+    .regular-text {
+      color: #495057;
+    }
+
     .tool-info {
       grid-column: 1 / -1;
       margin-top: 10px;
@@ -405,5 +432,28 @@ export class AppComponent {
     } finally {
       this.isLoading = false;
     }
+  }
+
+  getAnswerParts(answer: string): { text: string, isAccountInfo: boolean }[] {
+    if (!answer) return [{ text: '', isAccountInfo: false }];
+    
+    // Split the answer by "Based on your account information:"
+    const accountInfoMarker = 'Based on your account information:';
+    const parts = answer.split(accountInfoMarker);
+    
+    const result: { text: string, isAccountInfo: boolean }[] = [];
+    
+    // Add the part before "Based on your account information:"
+    if (parts[0]) {
+      result.push({ text: parts[0], isAccountInfo: false });
+    }
+    
+    // Add "Based on your account information:" part and the rest
+    if (parts.length > 1) {
+      result.push({ text: accountInfoMarker, isAccountInfo: true });
+      result.push({ text: parts[1], isAccountInfo: false });
+    }
+    
+    return result;
   }
 }

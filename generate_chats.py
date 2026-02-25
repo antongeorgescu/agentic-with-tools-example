@@ -109,7 +109,8 @@ class ChatGenerator:
             qa_pair["description"] = result['tool_description']
             # qa_pair["answer"] = result['response']
             qa_pair["tool_return"] = result.get('tool_return', 'No tool result available')
-                        
+            qa_pair["answer"] = self._generate_summary(qa_pair["answer"], qa_pair["tool_return"])
+            
             # Track tools used
             tools_used.add(tool_used)
             tool_usage_count[tool_used] = tool_usage_count.get(tool_used, 0) + 1
@@ -227,6 +228,34 @@ Format your response as JSON:
         
         return {"question": question, "answer": answer}
     
+    def _generate_summary(self, original_answer: str, tool_return: str) -> str:
+        """
+        Generate a comprehensive summary combining the original answer with tool results.
+        
+        Args:
+            original_answer: The original AI-generated answer
+            tool_return: The result from the tool execution
+            
+        Returns:
+            str: Combined answer incorporating both the original response and tool data
+        """
+        if not tool_return or tool_return == "No tool result available":
+            return original_answer
+        
+        # Extract the tool prefix and data from the tool return
+        # Format: "TOOLCODE: Detailed information..."
+        if ":" in tool_return:
+            tool_code, tool_data = tool_return.split(":", 1)
+            tool_data = tool_data.strip()
+            
+            # Create a comprehensive response combining both
+            summary = f"{original_answer}\n\nBased on your account information: {tool_data}"
+        else:
+            # If no specific formatting, just append the tool result
+            summary = f"{original_answer}\n\nAccount details: {tool_return}"
+        
+        return summary
+
     def print_qa_pairs(self, result: Dict[str, Any]):
         """Print Q&A pairs to console in a formatted way."""
         qa_pairs = result["qa_pairs"]

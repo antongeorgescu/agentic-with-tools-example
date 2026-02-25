@@ -634,11 +634,11 @@ class FinancialChatAgent:
             # Refinancing - check before general rate questions - ADD RENEWAL TERMS
             (["refinance", "refi", "consolidation", "refinancing rate", "should i refinance", "renew mortgage", "renewing mortgage", "mortgage renewal", "renewal options", "renew my mortgage", "mortgage term", "end of term", "new rate offers", "rate offers"], "refinancing_tool", "Function that handles refinancing options, with parameters extracted from the user query. Topics include refinancing eligibility, rate comparison, and application process."),
             
-            # Hardship - very specific context
-            (["hardship", "financial difficulty", "can't pay", "struggling with payments", "payment help", "defer payment", "forbearance"], "hardship_tool", "Function that handles financial hardship assistance, with parameters extracted from the user query. Topics include deferment options, payment plans, and eligibility criteria."),
+            # Hardship - very specific context - ADD MORE HARDSHIP VARIATIONS
+            (["hardship", "financial difficulty", "financial difficulties", "can't pay", "won't be able to make", "struggling with payments", "payment help", "defer payment", "forbearance", "facing difficulties", "financial troubles", "can't afford", "unable to pay"], "hardship_tool", "Function that handles financial hardship assistance, with parameters extracted from the user query. Topics include deferment options, payment plans, and eligibility criteria."),
             
-            # Missed payments - specific context - MAKE PENALTY MORE SPECIFIC  
-            (["missed payment", "late payment", "payment late", "late fee", "missed a payment", "behind on payments", "overdue payment", "payment penalty", "late payment penalty"], "missed_payment_tool", "Function that handles missed payment penalties, with parameters extracted from the user query. Topics include late fees, penalty calculations, and payment recovery options."),
+            # Missed payments - specific context - ADD MORE PAYMENT VARIATIONS  
+            (["missed payment", "miss payment", "miss these payments", "miss my payments", "late payment", "payment late", "late fee", "missed a payment", "behind on payments", "overdue payment", "payment penalty", "late payment penalty", "penalties", "repercussions", "consequences", "skip payment"], "missed_payment_tool", "Function that handles missed payment penalties, with parameters extracted from the user query. Topics include late fees, penalty calculations, and payment recovery options."),
             
             # Payment increase - be more specific about payment modifications  
             (["increase payment", "pay more", "higher payment", "additional payment", "extra payment", "boost payment", "raise payment"], "payment_increase_tool", "Function that handles payment increase scenarios, with parameters extracted from the user query. Topics include increasing monthly payments, adjusting payment schedules, and calculating new payment amounts."),
