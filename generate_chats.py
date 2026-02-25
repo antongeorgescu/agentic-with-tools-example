@@ -371,10 +371,11 @@ def request_for_generate_qa_pairs(npairs: int):
     else:
         print("Azure OpenAI not available - using mock generation")
     
-    print(f"Generating {npairs} Q&A pairs using deployment: gpt-35-turbo")
+    deployment_name = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")
+    print(f"Generating {npairs} Q&A pairs using deployment: {deployment_name}")
     
     # Generate Q&A pairs
-    result = generator.generate_qa_pairs(npairs, "gpt-35-turbo")
+    result = generator.generate_qa_pairs(npairs, deployment_name)
     
     return result
 

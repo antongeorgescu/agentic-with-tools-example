@@ -47,7 +47,7 @@ import { FormsModule } from '@angular/forms';
                 <textarea readonly class="answer-box">{{ qa.answer }}</textarea>
               </div>
               <div class="tool-info" *ngIf="qa.tool_used">
-                <h5><strong>Tool:</strong> {{ qa.tool_used }}</h5>
+                <strong>Tool:</strong><span style="color: red;"> {{ qa.tool_used }}</span>&nbsp;<strong>Description:</strong> {{ qa.description }}
               </div>
             </div>
           </div>

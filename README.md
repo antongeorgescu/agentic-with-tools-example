@@ -51,6 +51,118 @@ ng serve
 ```
 Frontend opens at `http://localhost:4200`
 
+## How to Launch the Complete System
+
+### Step 1: Setup Python Environment and Dependencies
+
+```powershell
+# Navigate to project directory
+cd "C:\Users\ag4488\OneDrive - Finastra\Architecture\Agentic Sample"
+
+# Create and activate Python virtual environment (if not already done)
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+# Install Python dependencies
+pip install flask flask-cors openai python-dotenv pydantic langchain langchain-openai langchain-community langchain-core
+```
+
+### Step 2: Launch Flask API Backend
+
+```powershell
+# Start Flask API server (from project root directory)
+.\.venv\Scripts\python.exe app.py
+
+# Expected output:
+# * Running on http://127.0.0.1:5000
+# * Debug mode: on
+```
+
+**Flask API will be available at:** `http://localhost:5000`
+
+### Step 3: Setup Angular Frontend Dependencies  
+
+```powershell
+# Navigate to Angular app directory
+cd angular-app
+
+# Install Node.js dependencies (if not already done)
+npm install
+
+# Note: Requires Node.js 18+ and Angular CLI
+# Install Angular CLI globally if needed: npm install -g @angular/cli
+```
+
+### Step 4: Launch Angular Frontend
+
+```powershell
+# Start Angular development server (from angular-app directory)
+ng serve --port 4202
+
+# Expected output:
+# ✔ Browser application bundle generation complete.
+# ** Angular Live Development Server is listening on localhost:4202 **
+```
+
+**Angular Frontend will be available at:** `http://localhost:4202`
+
+### Step 5: Test the Complete System
+
+1. **Open browser** to `http://localhost:4202`
+2. **Select number of Q&A pairs** (1-10) using the input field
+3. **Click "Run Generator"** button
+4. **Watch results appear** in three sections:
+   - **Top Section**: Generated Q&A pairs with questions and answers
+   - **Middle Section**: Topics used in generation
+   - **Bottom Section**: Tools used with usage statistics
+
+### Troubleshooting
+
+**Port Conflicts:**
+- If port 5000 is busy, modify `app.py`: `app.run(port=5001)`
+- If port 4202 is busy, use: `ng serve --port 4203`
+
+**Flask API Not Responding:**
+```powershell
+# Check if Flask is running
+Invoke-WebRequest -Uri "http://localhost:5000/run_new_caller/1" -Method Get
+```
+
+**Angular Compilation Errors:**
+```powershell
+# Clear cache and reinstall
+rm -rf node_modules
+rm package-lock.json
+npm install
+```
+
+**Azure OpenAI Not Configured:**
+- System will use fallback mock responses if Azure OpenAI credentials aren't set
+- For full GenAI features, configure `.env` file with Azure OpenAI credentials
+
+### Running Both Services Simultaneously
+
+**Option 1: Two Terminal Windows**
+```powershell
+# Terminal 1 - Flask API
+cd "C:\Users\ag4488\OneDrive - Finastra\Architecture\Agentic Sample"
+.\.venv\Scripts\python.exe app.py
+
+# Terminal 2 - Angular App  
+cd "C:\Users\ag4488\OneDrive - Finastra\Architecture\Agentic Sample\angular-app"
+ng serve --port 4202
+```
+
+**Option 2: Background Processes**
+```powershell
+# Start Flask API in background
+Start-Process powershell -ArgumentList "-Command", "cd 'C:\Users\ag4488\OneDrive - Finastra\Architecture\Agentic Sample'; .\.venv\Scripts\python.exe app.py"
+
+# Start Angular in current terminal
+cd angular-app
+ng serve --port 4202
+```
+
 ## API Endpoints
 
 ### Core Generation
