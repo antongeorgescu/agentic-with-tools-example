@@ -104,9 +104,11 @@ class ChatGenerator:
             
             # Extract tool information
             tool_used = result['tool_used']
-            qa_pair["tool_used"] = f"(function) {tool_used}"
+            qa_pair["tool_used"] = f" (CBS Service) {tool_used}"
             qa_pair["parameters"] = result['parameters']
             qa_pair["description"] = result['tool_description']
+            # qa_pair["answer"] = result['response']
+            qa_pair["tool_return"] = result.get('tool_return', 'No tool result available')
                         
             # Track tools used
             tools_used.add(tool_used)

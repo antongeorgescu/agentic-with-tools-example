@@ -15,6 +15,7 @@ appropriate tools based on user queries.
 # bandit: skip
 # nosec
 
+from json import tool
 import os
 import json
 from typing import List, Dict, Any, Optional
@@ -344,11 +345,24 @@ class FinancialChatAgent:
             # Fallback response when agent is not available
             fallback_response = self._fallback_response(user_input)
             tool_info = self._classify_user_query(user_input)
+            
+            # Try to execute the tool even without LLM for testing
+            tool_result = "No tool execution (agent not available)"
+            if tool_info["tool_name"] != "general_inquiry":
+                for tool in self.tools:
+                    if hasattr(tool, 'name') and tool.name == tool_info["tool_name"]:
+                        try:
+                            tool_result = tool._run(user_input)
+                        except Exception as e:
+                            tool_result = f"Tool execution failed: {str(e)}"
+                        break
+            
             return {
                 "response": fallback_response,
                 "tool_used": tool_info["tool_name"],
                 "parameters": {"userQuery": user_input},
-                "tool_description": tool_info["description"]
+                "tool_description": tool_info["description"],
+                "tool_return": tool_result
             }
         
         try:
@@ -357,28 +371,33 @@ class FinancialChatAgent:
             
             # Try to find and execute the appropriate tool
             selected_tool = None
+            tool_result = "No tool executed"
+            
             for tool in self.tools:
                 if hasattr(tool, 'name') and tool.name == tool_info["tool_name"]:
                     selected_tool = tool
                     break
             
-            if selected_tool and hasattr(selected_tool, 'func'):
+            if selected_tool and hasattr(selected_tool, '_run'):
                 # Execute the tool with the user input
                 try:
-                    tool_result = selected_tool.func(user_input)
-                    response = tool_result if isinstance(tool_result, str) else str(tool_result)
+                    tool_result = selected_tool._run(user_input)
+                    response = f"I'll help you with that. {tool_result}"
                 except Exception as tool_error:
                     print(f"Tool execution error: {tool_error}")
+                    tool_result = f"Tool execution failed: {str(tool_error)}"
                     response = self._fallback_response(user_input)
             else:
                 # No specific tool found, use fallback
                 response = self._fallback_response(user_input)
+                tool_result = "No matching tool found"
             
             return {
                 "response": response,
                 "tool_used": tool_info.get("tool_name", "unknown"),
                 "parameters": {"userQuery": user_input},
-                "tool_description": tool_info.get("description", "No tool description available")
+                "tool_description": tool_info.get("description", "No tool description available"),
+                "tool_return": tool_result
             }
         
         except Exception as e:
@@ -389,7 +408,8 @@ class FinancialChatAgent:
                 "response": fallback_response,
                 "tool_used": tool_info["tool_name"],
                 "parameters": {"userQuery": user_input, "error": str(e)},
-                "tool_description": tool_info["description"]
+                "tool_description": tool_info["description"],
+                "tool_return": f"Error occurred: {str(e)}"
             }
 
     def _classify_user_query(self, user_input: str) -> Dict[str, str]:
@@ -406,16 +426,16 @@ class FinancialChatAgent:
         
         # Define keyword mappings to tools
         tool_mappings = [
-            (["balance", "owe", "remaining", "left", "current"], "balance_tool", "Balance and payment date inquiries"),
-            (["increase", "raise", "more", "higher", "boost"], "payment_increase_tool", "Payment increase scenarios"),
-            (["lump", "extra", "additional", "one-time", "bulk"], "lump_sum_tool", "Lump-sum payment options"),
-            (["rate", "interest", "apr", "percentage"], "interest_rate_tool", "Interest rate information"),
-            (["miss", "late", "penalty", "behind", "overdue"], "missed_payment_tool", "Missed payment penalties"),
-            (["pre-approval", "preapproval", "pre approval"], "pre_approval_tool", "Pre-approval process"),
-            (["application", "apply", "applying", "documents"], "application_tool", "Loan application process"),
-            (["refinance", "refi", "consolidation"], "refinancing_tool", "Refinancing options"),
-            (["hardship", "difficulty", "help", "struggle", "defer"], "hardship_tool", "Financial hardship assistance"),
-            (["insurance", "escrow", "tax", "property"], "insurance_tool", "Insurance and escrow matters")
+            (["balance", "owe", "remaining", "left", "current"], "balance_tool", "Function that handles balance and payment date inquiries, with parameters extracted from the user query. Topics include current loan balance, final payment dates, payment schedules, and remaining balance information."),
+            (["increase", "raise", "more", "higher", "boost"], "payment_increase_tool", "Function that handles payment increase scenarios, with parameters extracted from the user query. Topics include increasing monthly payments, adjusting payment schedules, and calculating new payment amounts."),
+            (["lump", "extra", "additional", "one-time", "bulk"], "lump_sum_tool", "Function that handles lump-sum payment options, with parameters extracted from the user query. Topics include making additional payments, reducing principal, and calculating interest savings."),
+            (["rate", "interest", "apr", "percentage"], "interest_rate_tool", "Function that provides interest rate information, with parameters extracted from the user query. Topics include current rates, rate changes, and comparison of different rate options."),
+            (["miss", "late", "penalty", "behind", "overdue"], "missed_payment_tool", "Function that handles missed payment penalties, with parameters extracted from the user query. Topics include late fees, penalty calculations, and payment recovery options."),
+            (["pre-approval", "preapproval", "pre approval"], "pre_approval_tool", "Function that handles the pre-approval process, with parameters extracted from the user query. Topics include eligibility criteria, required documents, and application steps."),
+            (["application", "apply", "applying", "documents"], "application_tool", "Function that handles the loan application process, with parameters extracted from the user query. Topics include application steps, required documents, and approval timelines."),
+            (["refinance", "refi", "consolidation"], "refinancing_tool", "Function that handles refinancing options, with parameters extracted from the user query. Topics include refinancing eligibility, rate comparison, and application process."),
+            (["hardship", "difficulty", "help", "struggle", "defer"], "hardship_tool", "Function that handles financial hardship assistance, with parameters extracted from the user query. Topics include deferment options, payment plans, and eligibility criteria."),
+            (["insurance", "escrow", "tax", "property"], "insurance_tool", "Function that handles insurance and escrow matters, with parameters extracted from the user query. Topics include policy details, escrow accounts, and property tax information.")
         ]
         
         # Check each mapping
@@ -680,7 +700,7 @@ if __name__ == "__main__":
 
 def interest_rate(userQuery: str) -> str:
     """
-    Interest rate and total interest inquiries.
+    Function that handles interest rate and total interest inquiries, including rate comparisons and calculations.
     Topics: Interest rates, promotional rates, rate-lock periods.
     
     Args:
@@ -694,7 +714,7 @@ def interest_rate(userQuery: str) -> str:
 
 def missed_payments(userQuery: str) -> str:
     """
-    Missed payments and penalty inquiries.
+    Function that handles missed payments and penalty inquiries. Used for questions about missed or late payments, payment penalties, consequences of non-payment, and payment assistance programs.
     Topic: "Borrower is unable to make the following 3 payments and asks about penalties and repercussions."
     
     Args:
@@ -708,7 +728,7 @@ def missed_payments(userQuery: str) -> str:
 
 def pre_approval(userQuery: str) -> str:
     """
-    Pre-approval process and status.
+    Function that handles pre-approval process and status inquiries. Covers questions about whether pre-approval has been processed, required documents, income verification, and credit check timelines.
     Topic: "Borrower is asking whether their pre‑approval has been processed, required documents, income verification, and credit check timelines"
     
     Args:
@@ -722,8 +742,8 @@ def pre_approval(userQuery: str) -> str:
 
 def next_steps(userQuery: str) -> str:
     """
-    Next steps after pre-approval.
-    Topic: "Borrower is asking about the next steps after pre‑approval, including document submission, income verification, and credit check timelines"
+    Function that handles inquiries about the next steps after pre-approval, including document submission, income verification, and credit check timelines.
+    Topic: "Borrower is asking about the next steps after pre‑approval, including document submission, income verification, and credit check timelines.
     
     Args:
         userQuery (str): User's query string
@@ -736,7 +756,7 @@ def next_steps(userQuery: str) -> str:
 
 def loan_application(userQuery: str) -> str:
     """
-    Loan application process and requirements.
+    Function that handles loan application process,required documents, income verification, credit checks.
     Topics: Application process, required documents, income verification, credit checks.
     
     Args:
@@ -750,8 +770,8 @@ def loan_application(userQuery: str) -> str:
 
 def rate_types(userQuery: str) -> str:
     """
-    Rate types and comparison (fixed vs variable).
-    Topic: "Discussion about fixed vs. variable rates, current promotional rates, and how rate‑lock periods work."
+    Function that handles inquiries about rate types and comparison (fixed vs variable),current promotional rates, and how rate‑lock periods work.
+    Topic: "Discussion about fixed vs. variable rates, current promotional rates, and how rate‑lock periods work.
     
     Args:
         userQuery (str): User's query string
@@ -764,7 +784,7 @@ def rate_types(userQuery: str) -> str:
 
 def amortization(userQuery: str) -> str:
     """
-    Amortization period adjustments.
+    Function that handles amortization period adjustments. Gauges how shortening or extending the amortization period affects long-term interest costs and monthly payments.
     Topic: "Borrower is wanting to shorten or extend the amortization period and how it affects long‑term interest costs."
     
     Args:
@@ -778,7 +798,7 @@ def amortization(userQuery: str) -> str:
 
 def term_renewal(userQuery: str) -> str:
     """
-    Term renewal and end-of-term options.
+    Function that handles term renewal and end-of-term options inquiries, like  new rate offers, early renewal penalties, and documents required.
     Topic: "Options available when nearing the end of the current term, new rate offers, early renewal penalties, and documents required."
     
     Args:
@@ -792,8 +812,8 @@ def term_renewal(userQuery: str) -> str:
 
 def prepayment_penalties(userQuery: str) -> str:
     """
-    Prepayment penalties and IRD calculations.
-    Topic: "Borrower is asking about prepayment penalties, IRD (Interest Rate Differential), and scenarios where penalties may be waived."
+    Function that handles prepayment penalties, IRD (Interest Rate Differential) calculations, and scenarios where penalties may be waived.
+    Topic: "Borrower is asking about prepayment penalties, IRD (Interest Rate Differential), and scenarios where penalties may be waived.
     
     Args:
         userQuery (str): User's query string
@@ -806,8 +826,8 @@ def prepayment_penalties(userQuery: str) -> str:
 
 def prepayment_options(userQuery: str) -> str:
     """
-    Annual prepayment options and scheduling.
-    Topic: "How much the borrower can prepay annually, impact on principal reduction, and how to schedule extra payments."
+    Function that handles annual prepayment options and scheduling inquiries. Used on inquiries about how much the borrower can prepay annually, impact on principal reduction, and how to schedule extra payments.
+    Topic: "How much the borrower can prepay annually, impact on principal reduction, and how to schedule extra payments.
     
     Args:
         userQuery (str): User's query string
@@ -820,8 +840,8 @@ def prepayment_options(userQuery: str) -> str:
 
 def refinancing(userQuery: str) -> str:
     """
-    Refinancing options and purposes.
-    Topic: "Borrower is enquiring about refinancing for debt consolidation, home renovations, improved interest rates, or accessing home equity."
+    Function that handles refinancing options and inquiries.about refinancing for debt consolidation, home renovations, improved interest rates, or accessing home equity.
+    Topic: "Borrower is inquiring about refinancing for debt consolidation, home renovations, improved interest rates, or accessing home equity.
     
     Args:
         userQuery (str): User's query string
@@ -834,8 +854,8 @@ def refinancing(userQuery: str) -> str:
 
 def financial_hardship(userQuery: str) -> str:
     """
-    Financial hardship and assistance programs.
-    Topic: "Borrower is explaining temporary financial difficulties and asking about deferrals, payment restructuring, or hardship programs."
+    Function that handles financial hardship and assistance program inquiries. Used for temporary financial difficulties and asking about deferrals, payment restructuring, or hardship programs.
+    Topic: "Borrower is explaining temporary financial difficulties and asking about deferrals, payment restructuring, or hardship programs.
     
     Args:
         userQuery (str): User's query string
@@ -848,8 +868,8 @@ def financial_hardship(userQuery: str) -> str:
 
 def insurance(userQuery: str) -> str:
     """
-    Insurance and escrow requirements.
-    Topic: "Borrower is verifying property tax escrow, home insurance requirements, mortgage default insurance, and how changes affect monthly payments."
+    Function that handles insurance and escrow requirements inquiries. Used for property tax escrow, home insurance requirements, mortgage default insurance, and how changes affect monthly payments.
+    Topic: "Borrower is verifying property tax escrow, home insurance requirements, mortgage default insurance, and how changes affect monthly payments.
     
     Args:
         userQuery (str): User's query string
@@ -864,8 +884,7 @@ def insurance(userQuery: str) -> str:
 
 def payment_info(userQuery: str) -> str:
     """
-    Generic payment-related function.
-    Reusable across payment increase, missed payment, and general payment topics.
+    Function that handles generic payment-related inquiries. Used across payment increase, missed payment, and general payment topics.
     
     Args:
         userQuery (str): User's query string
@@ -878,8 +897,7 @@ def payment_info(userQuery: str) -> str:
 
 def documents(userQuery: str) -> str:
     """
-    Document and verification requirements.
-    Reusable across application, pre-approval, and renewal processes.
+    Function that handles document and verification requirements inquiries. Used across application, pre-approval, and renewal processes.
     
     Args:
         userQuery (str): User's query string
@@ -892,8 +910,7 @@ def documents(userQuery: str) -> str:
 
 def timelines(userQuery: str) -> str:
     """
-    Timeline and scheduling inquiries.
-    Reusable across various processes that involve timelines.
+    Function that handles timeline and scheduling inquiries. Used across various processes that involve timelines.
     
     Args:
         userQuery (str): User's query string
@@ -906,8 +923,7 @@ def timelines(userQuery: str) -> str:
 
 def calculation(userQuery: str) -> str:
     """
-    Calculation-related functions.
-    Reusable for interest calculations, payment calculations, penalty calculations.
+    Function that handles calculation-related inquiries. Used for interest calculations, payment calculations, penalty calculations.
     
     Args:
         userQuery (str): User's query string
@@ -920,8 +936,7 @@ def calculation(userQuery: str) -> str:
 
 def options(userQuery: str) -> str:
     """
-    Options and scenarios analysis.
-    Reusable across various topics that involve multiple options or scenarios.
+    Function that handles options and scenarios analysis inquiries. Used across various topics that involve multiple options or scenarios.
     
     Args:
         userQuery (str): User's query string
@@ -934,7 +949,7 @@ def options(userQuery: str) -> str:
 
 def balance(userQuery: str) -> str:
     """
-    Balance and payment date inquiries.
+    Function that handles balance and payment date inquiries. Resusable for balance and the final payment date with the current payment
     Topic: "Borrower wants to know the balance and the final payment date with the current payment."
     
     Args:
@@ -948,7 +963,7 @@ def balance(userQuery: str) -> str:
 
 def payment_increase(userQuery: str) -> str:
     """
-    Payment increase scenarios and options.
+    Function that handles payment increase scenarios, maximum allowed and final payment dates. 
     Topic: "Borrower wants to increase the payment, asks how much is allowed, and asks for final payment dates across scenarios proposed by the agent."
     
     Args:
@@ -962,7 +977,7 @@ def payment_increase(userQuery: str) -> str:
 
 def lump_sum(userQuery: str) -> str:
     """
-    Lump-sum payment contributions.
+    Function that handles lump-sum payment contributions inquiries.
     Topic: "Borrower wants to make a lump-sum payment and asks how much can be contributed."
     
     Args:
@@ -976,7 +991,7 @@ def lump_sum(userQuery: str) -> str:
 
 def application(userQuery: str) -> str:
     """
-    Loan application process and requirements.
+    Function that handles loan application process and requirements inquiries. Manages both pre-approval and application process inquiries to ensure consistency in handling document and verification requirements.
     Topics: Application process, required documents, income verification, credit checks.
     
     Args:
@@ -990,7 +1005,7 @@ def application(userQuery: str) -> str:
 
 def rate_variation(userQuery: str) -> str:
     """
-    Rate variation and comparison (fixed vs variable).
+    Function that handles rate variation and comparison inquiries (fixed vs variable). Covers inquiries about differences between fixed and variable rates, current promotional rates, and how rate-lock periods work.
     Topic: "Discussion about fixed vs. variable rates, current promotional rates, and how rate‑lock periods work."
     
     Args:

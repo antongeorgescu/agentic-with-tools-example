@@ -47,7 +47,13 @@ import { FormsModule } from '@angular/forms';
                 <textarea readonly class="answer-box">{{ qa.answer }}</textarea>
               </div>
               <div class="tool-info" *ngIf="qa.tool_used">
-                <strong>Tool:</strong><span style="color: red;"> {{ qa.tool_used }}</span>&nbsp;<strong>Description:</strong> {{ qa.description }}
+                <div class="tool-details">
+                  <div><strong>Tool:</strong> <span class="tool-name">{{ qa.tool_used }}</span></div>
+                  <div><strong>Description:</strong> {{ qa.description }}</div>
+                  <div *ngIf="qa.tool_return" class="tool-return">
+                    <strong>Tool Result:</strong> <span class="tool-result">{{ qa.tool_return }}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -233,9 +239,36 @@ import { FormsModule } from '@angular/forms';
     
     .tool-info {
       grid-column: 1 / -1;
-      color: #6c757d;
-      font-style: italic;
       margin-top: 10px;
+      background: #f8f9fa;
+      padding: 10px;
+      border-radius: 4px;
+      border-left: 4px solid #6c757d;
+    }
+    
+    .tool-details {
+      font-size: 0.9em;
+    }
+    
+    .tool-details > div {
+      margin-bottom: 4px;
+    }
+    
+    .tool-name {
+      color: #dc3545;
+      font-weight: bold;
+    }
+    
+    .tool-return {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #dee2e6;
+    }
+    
+    .tool-result {
+      color: #2f06e6;
+      font-weight: normal;
+      font-style: normal;
     }
     
     .topics-grid, .tools-grid {
