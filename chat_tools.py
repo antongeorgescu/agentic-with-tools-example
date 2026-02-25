@@ -63,7 +63,23 @@ class BalanceTool(BaseTool):
 
     def _run(self, userQuery: str) -> str:
         # Process balance-related queries
-        return f"BALNC: Processing balance inquiry for: {userQuery[:50]}..."
+        print(f"🔧 DEBUG: BalanceTool._run called with query: {userQuery}")
+        print(f"🔧 DEBUG: About to return balance result...")
+        
+        # TODO: Add actual processing logic here
+        # Example of what real implementation might look like:
+        # 1. Parse user query for account/loan identifiers
+        # 2. Call external API or database to get balance
+        # 3. Format and return real data
+        
+        # Simulate some business logic
+        import random
+        simulated_balance = random.randint(50000, 500000)
+        simulated_next_payment = "March 15, 2026"
+        
+        result = f"BALNC: Current loan balance: ${simulated_balance:,}. Next payment due: {simulated_next_payment}"
+        print(f"🔧 DEBUG: Returning result: {result}")
+        return result
     
     async def _arun(self, userQuery: str) -> str:
         return self._run(userQuery)
@@ -80,7 +96,23 @@ class PaymentIncreaseTool(BaseTool):
     args_schema = FinancialQueryInput
 
     def _run(self, userQuery: str) -> str:
-        return f"PAYUP: Processing payment increase inquiry for: {userQuery[:50]}..."
+        print(f"🔧 DEBUG: PaymentIncreaseTool._run called with query: {userQuery}")
+        print(f"🔧 DEBUG: About to return payment increase result...")
+        
+        # TODO: Add actual processing logic here
+        # Example: Parse user query for payment amounts, calculate scenarios
+        
+        # Simulate some business logic
+        import random
+        current_payment = random.randint(1200, 3500)
+        increase_amount = random.randint(100, 500)
+        new_payment = current_payment + increase_amount
+        years_saved = round(random.uniform(2.5, 8.5), 1)
+        interest_saved = random.randint(15000, 85000)
+        
+        result = f"PAYUP: Current payment: ${current_payment:,}. Proposed increase: +${increase_amount:,} = ${new_payment:,}/month. This would save {years_saved} years and ${interest_saved:,} in interest."
+        print(f"🔧 DEBUG: Returning result: {result}")
+        return result
     
     async def _arun(self, userQuery: str) -> str:
         return self._run(userQuery)
@@ -97,7 +129,23 @@ class LumpSumTool(BaseTool):
     args_schema = FinancialQueryInput
 
     def _run(self, userQuery: str) -> str:
-        return f"LUMPD: Processing lump-sum payment inquiry for: {userQuery[:50]}..."
+        print(f"🔧 DEBUG: LumpSumTool._run called with query: {userQuery}")
+        print(f"🔧 DEBUG: About to return lump-sum payment result...")
+        
+        # TODO: Add actual processing logic here
+        # Example: Calculate impact of lump-sum payments on loan term and interest
+        
+        # Simulate some business logic
+        import random
+        suggested_amount = random.randint(5000, 50000)
+        current_balance = random.randint(150000, 400000)
+        years_saved = round(random.uniform(1.2, 4.8), 1)
+        interest_saved = random.randint(8000, 45000)
+        new_payoff_date = "September 2029" if years_saved > 3 else "March 2031"
+        
+        result = f"LUMPD: Lump-sum payment of ${suggested_amount:,} would reduce your ${current_balance:,} balance, saving {years_saved} years and ${interest_saved:,} in interest. New payoff date: {new_payoff_date}."
+        print(f"🔧 DEBUG: Returning result: {result}")
+        return result
     
     async def _arun(self, userQuery: str) -> str:
         return self._run(userQuery)
@@ -115,7 +163,24 @@ class InterestRateTool(BaseTool):
     args_schema = FinancialQueryInput
 
     def _run(self, userQuery: str) -> str:
-        return f"RATES: Processing interest rate inquiry for: {userQuery[:50]}..."
+        print(f"🔧 DEBUG: InterestRateTool._run called with query: {userQuery}")
+        print(f"🔧 DEBUG: About to return interest rate result...")
+        
+        # TODO: Add actual processing logic here
+        # Example: Get current market rates, compare with user's rate
+        
+        # Simulate some business logic
+        import random
+        current_rate = round(random.uniform(3.25, 7.85), 2)
+        market_rate = round(random.uniform(3.15, 7.95), 2)
+        total_interest = random.randint(85000, 275000)
+        rate_type = random.choice(["Fixed 30-year", "Fixed 15-year", "5/1 ARM", "7/1 ARM"])
+        
+        comparison = "below" if current_rate < market_rate else "above" if current_rate > market_rate else "at"
+        
+        result = f"RATES: Your current {rate_type} rate is {current_rate}% ({comparison} market average of {market_rate}%). Total interest over loan term: ${total_interest:,}."
+        print(f"🔧 DEBUG: Returning result: {result}")
+        return result
     
     async def _arun(self, userQuery: str) -> str:
         return self._run(userQuery)
@@ -132,7 +197,27 @@ class MissedPaymentTool(BaseTool):
     args_schema = FinancialQueryInput
 
     def _run(self, userQuery: str) -> str:
-        return f"MISSP: Processing missed payment inquiry for: {userQuery[:50]}..."
+        print(f"🔧 DEBUG: MissedPaymentTool._run called with query: {userQuery}")
+        print(f"🔧 DEBUG: About to return missed payment result...")
+        
+        # TODO: Add actual processing logic here
+        # Example: Calculate late fees, check payment history, offer assistance
+        
+        # Simulate some business logic
+        import random
+        days_late = random.randint(1, 45)
+        late_fee = random.choice([25, 50, 75, 95, 125])
+        grace_period = random.choice([10, 15, 30])
+        next_payment_due = "March 1, 2026"
+        
+        if days_late <= grace_period:
+            status = "within grace period - no fee assessed"
+        else:
+            status = f"${late_fee} late fee applied"
+        
+        result = f"MISSP: Payment is {days_late} days late ({status}). Next payment due: {next_payment_due}. Contact us within 10 days to discuss payment assistance options."
+        print(f"🔧 DEBUG: Returning result: {result}")
+        return result
     
     async def _arun(self, userQuery: str) -> str:
         return self._run(userQuery)
@@ -149,7 +234,26 @@ class PreApprovalTool(BaseTool):
     args_schema = FinancialQueryInput
 
     def _run(self, userQuery: str) -> str:
-        return f"PREAP: Processing pre-approval inquiry for: {userQuery[:50]}..."
+        print(f"🔧 DEBUG: PreApprovalTool._run called with query: {userQuery}")
+        print(f"🔧 DEBUG: About to return pre-approval result...")
+        
+        # TODO: Add actual processing logic here
+        # Example: Check credit requirements, income verification, documentation needed
+        
+        # Simulate some business logic
+        import random
+        max_approval = random.randint(200000, 800000)
+        credit_score_req = random.choice([620, 640, 660, 680, 700])
+        processing_time = random.choice(["24-48 hours", "2-3 business days", "3-5 business days"])
+        documents_needed = random.choice([
+            "W-2s, pay stubs, bank statements",
+            "Tax returns, employment verification, asset documentation",
+            "Income documentation, credit authorization, property information"
+        ])
+        
+        result = f"PREAP: Pre-approval available up to ${max_approval:,} (min. credit score: {credit_score_req}). Processing time: {processing_time}. Required documents: {documents_needed}."
+        print(f"🔧 DEBUG: Returning result: {result}")
+        return result
     
     async def _arun(self, userQuery: str) -> str:
         return self._run(userQuery)
@@ -167,7 +271,30 @@ class ApplicationTool(BaseTool):
     args_schema = FinancialQueryInput
 
     def _run(self, userQuery: str) -> str:
-        return f"APPLI: Processing application inquiry for: {userQuery[:50]}..."
+        print(f"🔧 DEBUG: ApplicationTool._run called with query: {userQuery}")
+        print(f"🔧 DEBUG: About to return application result...")
+        
+        # TODO: Add actual processing logic here
+        # Example: Track application status, required documents, next steps
+        
+        # Simulate some business logic
+        import random
+        app_status = random.choice(["In Review", "Pending Documentation", "Underwriting", "Approved - Pending Conditions", "Ready to Close"])
+        app_number = f"LN{random.randint(100000, 999999)}"
+        estimated_close = random.choice(["March 15, 2026", "March 22, 2026", "April 5, 2026", "April 12, 2026"])
+        
+        if app_status == "Pending Documentation":
+            next_step = "Submit requested income verification documents"
+        elif app_status == "Underwriting":
+            next_step = "Await underwriter review (3-5 business days)"
+        elif app_status == "Ready to Close":
+            next_step = "Schedule closing appointment"
+        else:
+            next_step = "Continue monitoring application progress"
+        
+        result = f"APPLI: Application #{app_number} status: {app_status}. Estimated closing: {estimated_close}. Next step: {next_step}."
+        print(f"🔧 DEBUG: Returning result: {result}")
+        return result
     
     async def _arun(self, userQuery: str) -> str:
         return self._run(userQuery)
@@ -185,7 +312,25 @@ class RefinancingTool(BaseTool):
     args_schema = FinancialQueryInput
 
     def _run(self, userQuery: str) -> str:
-        return f"REFIN: Processing refinancing inquiry for: {userQuery[:50]}..."
+        print(f"🔧 DEBUG: RefinancingTool._run called with query: {userQuery}")
+        print(f"🔧 DEBUG: About to return refinancing result...")
+        
+        # TODO: Add actual processing logic here
+        # Example: Compare current vs. new rates, calculate break-even, assess equity
+        
+        # Simulate some business logic
+        import random
+        current_rate = round(random.uniform(4.5, 8.2), 2)
+        new_rate = round(current_rate - random.uniform(0.5, 2.0), 2)
+        monthly_savings = random.randint(150, 650)
+        closing_costs = random.randint(3500, 8500)
+        break_even_months = max(1, int(closing_costs / max(monthly_savings, 1)))
+        home_value = random.randint(300000, 750000)
+        equity_percent = random.randint(15, 45)
+        
+        result = f"REFIN: Refinance from {current_rate}% to {new_rate}% could save ${monthly_savings:,}/month. Closing costs: ${closing_costs:,} (break-even: {break_even_months} months). Home value: ${home_value:,} ({equity_percent}% equity)."
+        print(f"🔧 DEBUG: Returning result: {result}")
+        return result
     
     async def _arun(self, userQuery: str) -> str:
         return self._run(userQuery)
@@ -203,7 +348,33 @@ class HardshipTool(BaseTool):
     args_schema = FinancialQueryInput
 
     def _run(self, userQuery: str) -> str:
-        return f"HELPD: Processing hardship inquiry for: {userQuery[:50]}..."
+        print(f"🔧 DEBUG: HardshipTool._run called with query: {userQuery}")
+        print(f"🔧 DEBUG: About to return hardship assistance result...")
+        
+        # TODO: Add actual processing logic here
+        # Example: Assess hardship situation, available assistance programs, eligibility
+        
+        # Simulate some business logic
+        import random
+        program_options = [
+            "3-month payment deferral",
+            "6-month reduced payment plan",
+            "Loan modification program",
+            "Temporary forbearance (90 days)",
+            "Extended repayment plan"
+        ]
+        selected_option = random.choice(program_options)
+        eligibility_req = random.choice([
+            "Income documentation required",
+            "Hardship letter and financial statements needed",
+            "Employment verification required",
+            "Complete financial review necessary"
+        ])
+        contact_deadline = "within 10 business days"
+        
+        result = f"HELPD: Available assistance: {selected_option}. Eligibility: {eligibility_req}. Please contact our hardship department {contact_deadline} to begin the process."
+        print(f"🔧 DEBUG: Returning result: {result}")
+        return result
     
     async def _arun(self, userQuery: str) -> str:
         return self._run(userQuery)
@@ -221,7 +392,30 @@ class InsuranceTool(BaseTool):
     args_schema = FinancialQueryInput
 
     def _run(self, userQuery: str) -> str:
-        return f"INSUR: Processing insurance inquiry for: {userQuery[:50]}..."
+        print(f"🔧 DEBUG: InsuranceTool._run called with query: {userQuery}")
+        print(f"🔧 DEBUG: About to return insurance/escrow result...")
+        
+        # TODO: Add actual processing logic here
+        # Example: Check escrow balances, insurance requirements, policy details
+        
+        # Simulate some business logic
+        import random
+        escrow_balance = random.randint(1200, 4500)
+        monthly_escrow = random.randint(280, 650)
+        insurance_premium = random.randint(800, 2400)
+        property_tax = random.randint(2400, 8500)
+        next_analysis_date = random.choice(["June 2026", "July 2026", "August 2026"])
+        
+        insurance_status = random.choice([
+            "Current policy on file",
+            "Policy renewal required by March 31st",
+            "Updated declaration page needed",
+            "Premium increase detected - escrow adjustment pending"
+        ])
+        
+        result = f"INSUR: Escrow balance: ${escrow_balance:,}. Monthly escrow: ${monthly_escrow:,} (Insurance: ${insurance_premium:,}/year, Taxes: ${property_tax:,}/year). Status: {insurance_status}. Next analysis: {next_analysis_date}."
+        print(f"🔧 DEBUG: Returning result: {result}")
+        return result
     
     async def _arun(self, userQuery: str) -> str:
         return self._run(userQuery)
@@ -382,6 +576,9 @@ class FinancialChatAgent:
                 # Execute the tool with the user input
                 try:
                     tool_result = selected_tool._run(user_input)
+                    # Remove the processing message, keep only the prefix code
+                    # if ": Processing" in tool_result:
+                    #     tool_result = tool_result.split(": Processing")[0]
                     response = f"I'll help you with that. {tool_result}"
                 except Exception as tool_error:
                     print(f"Tool execution error: {tool_error}")
@@ -423,34 +620,59 @@ class FinancialChatAgent:
             dict: Tool classification information
         """
         user_lower = user_input.lower()
+        print(f"🔍 DEBUG: Classifying query: '{user_input}'")
+        print(f"🔍 DEBUG: Lowercase version: '{user_lower}'")
         
-        # Define keyword mappings to tools
+        # Define keyword mappings to tools - ORDER MATTERS! More specific patterns first
         tool_mappings = [
-            (["balance", "owe", "remaining", "left", "current"], "balance_tool", "Function that handles balance and payment date inquiries, with parameters extracted from the user query. Topics include current loan balance, final payment dates, payment schedules, and remaining balance information."),
-            (["increase", "raise", "more", "higher", "boost"], "payment_increase_tool", "Function that handles payment increase scenarios, with parameters extracted from the user query. Topics include increasing monthly payments, adjusting payment schedules, and calculating new payment amounts."),
-            (["lump", "extra", "additional", "one-time", "bulk"], "lump_sum_tool", "Function that handles lump-sum payment options, with parameters extracted from the user query. Topics include making additional payments, reducing principal, and calculating interest savings."),
-            (["rate", "interest", "apr", "percentage"], "interest_rate_tool", "Function that provides interest rate information, with parameters extracted from the user query. Topics include current rates, rate changes, and comparison of different rate options."),
-            (["miss", "late", "penalty", "behind", "overdue"], "missed_payment_tool", "Function that handles missed payment penalties, with parameters extracted from the user query. Topics include late fees, penalty calculations, and payment recovery options."),
-            (["pre-approval", "preapproval", "pre approval"], "pre_approval_tool", "Function that handles the pre-approval process, with parameters extracted from the user query. Topics include eligibility criteria, required documents, and application steps."),
-            (["application", "apply", "applying", "documents"], "application_tool", "Function that handles the loan application process, with parameters extracted from the user query. Topics include application steps, required documents, and approval timelines."),
-            (["refinance", "refi", "consolidation"], "refinancing_tool", "Function that handles refinancing options, with parameters extracted from the user query. Topics include refinancing eligibility, rate comparison, and application process."),
-            (["hardship", "difficulty", "help", "struggle", "defer"], "hardship_tool", "Function that handles financial hardship assistance, with parameters extracted from the user query. Topics include deferment options, payment plans, and eligibility criteria."),
-            (["insurance", "escrow", "tax", "property"], "insurance_tool", "Function that handles insurance and escrow matters, with parameters extracted from the user query. Topics include policy details, escrow accounts, and property tax information.")
+            # Pre-approval - check first as it's very specific - ADD MISSING VARIATIONS AND SHOPPING TERMS
+            (["pre-approval", "preapproval", "pre approval", "pre-approved", "preapproved", "been approved", "got approved", "get approved", "qualify for", "qualification", "shopping for mortgage", "looking at loan", "considering mortgage", "mortgage shopping"], "pre_approval_tool", "Function that handles the pre-approval process, with parameters extracted from the user query. Topics include eligibility criteria, required documents, and application steps."),
+            
+            # Application process - specific multi-word patterns - ADD VERIFICATION TERMS AND RENEWAL DOCS
+            (["application status", "loan application", "apply for", "applying for", "submit application", "application documents", "income verification", "credit check", "document submission", "verification process", "documents i need", "what documents", "paperwork needed", "renewal documents"], "application_tool", "Function that handles the loan application process, with parameters extracted from the user query. Topics include application steps, required documents, and approval timelines."),
+            
+            # Refinancing - check before general rate questions - ADD RENEWAL TERMS
+            (["refinance", "refi", "consolidation", "refinancing rate", "should i refinance", "renew mortgage", "renewing mortgage", "mortgage renewal", "renewal options", "renew my mortgage", "mortgage term", "end of term", "new rate offers", "rate offers"], "refinancing_tool", "Function that handles refinancing options, with parameters extracted from the user query. Topics include refinancing eligibility, rate comparison, and application process."),
+            
+            # Hardship - very specific context
+            (["hardship", "financial difficulty", "can't pay", "struggling with payments", "payment help", "defer payment", "forbearance"], "hardship_tool", "Function that handles financial hardship assistance, with parameters extracted from the user query. Topics include deferment options, payment plans, and eligibility criteria."),
+            
+            # Missed payments - specific context - MAKE PENALTY MORE SPECIFIC  
+            (["missed payment", "late payment", "payment late", "late fee", "missed a payment", "behind on payments", "overdue payment", "payment penalty", "late payment penalty"], "missed_payment_tool", "Function that handles missed payment penalties, with parameters extracted from the user query. Topics include late fees, penalty calculations, and payment recovery options."),
+            
+            # Payment increase - be more specific about payment modifications  
+            (["increase payment", "pay more", "higher payment", "additional payment", "extra payment", "boost payment", "raise payment"], "payment_increase_tool", "Function that handles payment increase scenarios, with parameters extracted from the user query. Topics include increasing monthly payments, adjusting payment schedules, and calculating new payment amounts."),
+            
+            # Lump sum - specific payment type
+            (["lump sum", "lump-sum", "one-time payment", "extra principal", "additional principal", "bulk payment", "large payment"], "lump_sum_tool", "Function that handles lump-sum payment options, with parameters extracted from the user query. Topics include making additional payments, reducing principal, and calculating interest savings."),
+            
+            # Interest rates - be more specific to avoid conflicts - EXPAND WITH MORE RATE TERMS
+            (["interest rate", "current rate", "apr", "what rate", "rate comparison", "my rate", "loan rate", "rate quotes", "interest quotes", "mortgage rate", "fixed rate", "variable rate", "promotional rate", "promotional rates", "rate options", "rate-lock", "lock period", "rate lock", "fixed or variable", "mortgage rates", "current rates", "best rates", "today's rates", "rate information"], "interest_rate_tool", "Function that provides interest rate information, with parameters extracted from the user query. Topics include current rates, rate changes, and comparison of different rate options."),
+            
+            # Insurance and escrow - specific terms
+            (["insurance", "escrow", "property tax", "homeowners insurance", "insurance premium", "escrow account", "tax escrow"], "insurance_tool", "Function that handles insurance and escrow matters, with parameters extracted from the user query. Topics include policy details, escrow accounts, and property tax information."),
+            
+            # Balance - be much more specific with balance-related terms
+            (["loan balance", "current balance", "owe on loan", "remaining balance", "balance left", "payoff amount", "principal balance"], "balance_tool", "Function that handles balance and payment date inquiries, with parameters extracted from the user query. Topics include current loan balance, final payment dates, payment schedules, and remaining balance information.")
         ]
         
-        # Check each mapping
+        # Check each mapping - using more precise matching
         for keywords, tool_name, description in tool_mappings:
-            if any(keyword in user_lower for keyword in keywords):
-                return {
-                    "tool_name": tool_name,
-                    "description": description,
-                    "parameters": {"userQuery": user_input}
-                }
+            print(f"🔍 DEBUG: Checking {tool_name} with keywords: {keywords}")
+            for keyword in keywords:
+                if keyword in user_lower:
+                    print(f"✅ DEBUG: MATCH found! '{keyword}' matches {tool_name}")
+                    return {
+                        "tool_name": tool_name,
+                        "description": description,
+                        "parameters": {"userQuery": user_input}
+                    }
         
         # Default fallback
+        print(f"❌ DEBUG: No tool matched - falling back to general_inquiry")
         return {
             "tool_name": "general_inquiry",
-            "description": "General financial inquiry",
+            "description": "General financial inquiry", 
             "parameters": {"userQuery": user_input}
         }
 
@@ -709,7 +931,7 @@ def interest_rate(userQuery: str) -> str:
     Returns:
         str: 5-letter summary code
     """
-    return "RATES"
+    return "[RATES] Deterministic function output for interest rate inquiries"
 
 
 def missed_payments(userQuery: str) -> str:
@@ -723,7 +945,7 @@ def missed_payments(userQuery: str) -> str:
     Returns:
         str: 5-letter summary code
     """
-    return "MISSP"
+    return "[MISSP] Deterministic function output for missed payments inquiries"
 
 
 def pre_approval(userQuery: str) -> str:
@@ -737,7 +959,7 @@ def pre_approval(userQuery: str) -> str:
     Returns:
         str: 5-letter summary code
     """
-    return "PREAP"
+    return "[PREAP] Deterministic function output for pre-approval inquiries"
 
 
 def next_steps(userQuery: str) -> str:
@@ -751,7 +973,7 @@ def next_steps(userQuery: str) -> str:
     Returns:
         str: 5-letter summary code
     """
-    return "NEXTP"
+    return "[NEXTP] Deterministic function output for next steps inquiries"
 
 
 def loan_application(userQuery: str) -> str:
@@ -765,7 +987,7 @@ def loan_application(userQuery: str) -> str:
     Returns:
         str: 5-letter summary code
     """
-    return "APPLI"
+    return "[APPLI] Deterministic function output for loan application inquiries"
 
 
 def rate_types(userQuery: str) -> str:
@@ -779,7 +1001,7 @@ def rate_types(userQuery: str) -> str:
     Returns:
         str: 5-letter summary code
     """
-    return "RATEV"
+    return "[RATEV] Deterministic function output for rate types inquiries"
 
 
 def amortization(userQuery: str) -> str:
@@ -793,7 +1015,7 @@ def amortization(userQuery: str) -> str:
     Returns:
         str: 5-letter summary code
     """
-    return "AMORT"
+    return "[AMORT] Deterministic function output for amortization inquiries"
 
 
 def term_renewal(userQuery: str) -> str:
@@ -807,7 +1029,7 @@ def term_renewal(userQuery: str) -> str:
     Returns:
         str: 5-letter summary code
     """
-    return "RENEW"
+    return "[RENEW] Deterministic function output for term renewal inquiries"
 
 
 def prepayment_penalties(userQuery: str) -> str:
@@ -821,7 +1043,7 @@ def prepayment_penalties(userQuery: str) -> str:
     Returns:
         str: 5-letter summary code
     """
-    return "PENAL"
+    return "[PENAL] Deterministic function output for prepayment penalties inquiries"
 
 
 def prepayment_options(userQuery: str) -> str:
@@ -835,7 +1057,7 @@ def prepayment_options(userQuery: str) -> str:
     Returns:
         str: 5-letter summary code
     """
-    return "PREPA"
+    return "[PREPA] Deterministic function output for prepayment options inquiries"
 
 
 def refinancing(userQuery: str) -> str:
@@ -849,7 +1071,7 @@ def refinancing(userQuery: str) -> str:
     Returns:
         str: 5-letter summary code
     """
-    return "REFIN"
+    return "[REFIN] Deterministic function output for refinancing inquiries"
 
 
 def financial_hardship(userQuery: str) -> str:
@@ -863,7 +1085,7 @@ def financial_hardship(userQuery: str) -> str:
     Returns:
         str: 5-letter summary code
     """
-    return "HELPD"
+    return "[HELPD] Deterministic function output for financial hardship inquiries"
 
 
 def insurance(userQuery: str) -> str:
@@ -877,7 +1099,7 @@ def insurance(userQuery: str) -> str:
     Returns:
         str: 5-letter summary code
     """
-    return "INSUR"
+    return "[INSUR] Deterministic function output for insurance inquiries"
 
 
 # Reusable utility functions that can be shared across topics
@@ -892,7 +1114,7 @@ def payment_info(userQuery: str) -> str:
     Returns:
         str: 5-letter summary code
     """
-    return "PAYMT"
+    return "[PAYMT] Deterministic function output for payment-related inquiries"
 
 
 def documents(userQuery: str) -> str:
@@ -905,7 +1127,7 @@ def documents(userQuery: str) -> str:
     Returns:
         str: 5-letter summary code
     """
-    return "DOCUM"
+    return "[DOCUM] Deterministic function output for document inquiries covering application, pre-approval, and renewal processes"
 
 
 def timelines(userQuery: str) -> str:
@@ -918,7 +1140,7 @@ def timelines(userQuery: str) -> str:
     Returns:
         str: 5-letter summary code
     """
-    return "TIMEL"
+    return "[TIMEL] Deterministic function output for maturity timeline inquiries"
 
 
 def calculation(userQuery: str) -> str:
@@ -931,7 +1153,7 @@ def calculation(userQuery: str) -> str:
     Returns:
         str: 5-letter summary code
     """
-    return "CALCS"
+    return "[CALCS] Deterministic function output for loan calculation inquiries (interest, payments, penalties)"
 
 
 def options(userQuery: str) -> str:
@@ -944,7 +1166,7 @@ def options(userQuery: str) -> str:
     Returns:
         str: 5-letter summary code
     """
-    return "OPTNS"
+    return "[OPTNS] Deterministic function output for loan payback options inquiries"
 
 
 def balance(userQuery: str) -> str:
@@ -958,7 +1180,7 @@ def balance(userQuery: str) -> str:
     Returns:
         str: 5-letter summary code
     """
-    return "BALNC"
+    return "[BALNC] Deterministic function output for loan balance inquiries"
 
 
 def payment_increase(userQuery: str) -> str:
@@ -972,7 +1194,7 @@ def payment_increase(userQuery: str) -> str:
     Returns:
         str: 5-letter summary code
     """
-    return "PAYUP"
+    return "[PAYUP] Deterministic function output for payment increase inquiries"
 
 
 def lump_sum(userQuery: str) -> str:
@@ -986,7 +1208,7 @@ def lump_sum(userQuery: str) -> str:
     Returns:
         str: 5-letter summary code
     """
-    return "LUMPD"
+    return "[LUMPD] Deterministic function output for lump-sum payment inquiries"
 
 
 def application(userQuery: str) -> str:
@@ -1000,7 +1222,7 @@ def application(userQuery: str) -> str:
     Returns:
         str: 5-letter summary code
     """
-    return "APPLI"
+    return "[APPLI] Deterministic function output for application inquiries"
 
 
 def rate_variation(userQuery: str) -> str:
@@ -1014,7 +1236,7 @@ def rate_variation(userQuery: str) -> str:
     Returns:
         str: 5-letter summary code
     """
-    return "RATEV"
+    return "[RATEV] Deterministic function output for rate variation inquiries"
 
 
 # Topic mapping dictionary for easy access

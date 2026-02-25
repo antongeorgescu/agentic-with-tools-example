@@ -186,3 +186,5 @@ config.json
 *.bak
 *.backup
 *.orig
+
+TEMP.md
