@@ -55,11 +55,32 @@ python app.py
 Server starts on `http://localhost:5000`
 
 #### 3. Frontend Setup (Angular)
+
+**Quick Installation (Recommended):**
+
+*Windows:*
 ```bash
 cd angular-app
+.\install-packages.bat
+```
+
+*Linux/macOS:*
+```bash
+cd angular-app
+chmod +x install-packages.sh
+./install-packages.sh
+```
+
+**Manual Installation:**
+```bash
+cd angular-app
+npm install -g @angular/cli  # If not already installed
 npm install
+# If peer dependency issues occur:
+# npm install --legacy-peer-deps
 ng serve
 ```
+
 Frontend opens at `http://localhost:4200`
 
 ## How to Launch the Complete System
@@ -97,11 +118,17 @@ pip install flask flask-cors openai python-dotenv pydantic langchain langchain-o
 # Navigate to Angular app directory
 cd angular-app
 
-# Install Node.js dependencies (if not already done)
+# Install Angular CLI globally (if not already installed)
+npm install -g @angular/cli
+
+# Install Node.js dependencies
 npm install
 
-# Note: Requires Node.js 18+ and Angular CLI
-# Install Angular CLI globally if needed: npm install -g @angular/cli
+# If you encounter peer dependency issues:
+npm install --legacy-peer-deps
+
+# Prerequisites: Node.js 18+ and npm
+# Download Node.js from: https://nodejs.org/
 ```
 
 ### Step 4: Launch Angular Frontend
@@ -139,12 +166,50 @@ ng serve
 Invoke-WebRequest -Uri "http://localhost:5000/run_new_caller/1" -Method Get
 ```
 
+**Angular Installation Issues:**
+
+*Node.js Version Problems:*
+```bash
+# Check Node.js version (should be 18+)
+node --version
+# If outdated, download latest LTS from https://nodejs.org/
+```
+
+*npm Permission Issues (macOS/Linux):*
+```bash
+# Fix npm permissions
+sudo chown -R $(whoami) ~/.npm
+```
+
+*Angular CLI Installation Issues:*
+```bash
+# Clear npm cache and reinstall CLI
+npm cache clean --force
+npm uninstall -g @angular/cli
+npm install -g @angular/cli@latest
+```
+
+*Package Installation Failures:*
+```bash
+# Clear everything and reinstall
+rm -rf node_modules package-lock.json
+npm install --legacy-peer-deps
+```
+
 **Angular Compilation Errors:**
 ```powershell
 # Clear cache and reinstall
 rm -rf node_modules
 rm package-lock.json
 npm install
+```
+
+**CORS Issues:**
+If you encounter cross-origin request errors, verify Flask CORS configuration:
+```python
+from flask_cors import CORS
+app = Flask(__name__)
+CORS(app)  # Allow all origins for development
 ```
 
 **Azure OpenAI Not Configured:**
@@ -269,6 +334,7 @@ The system includes 10 specialized financial tools:
 ## Angular Frontend Features
 
 - **Modern Angular 18**: Standalone components architecture, no NgModules required
+- **Advanced HTTP Client**: Uses `provideHttpClient()` with fetch API for improved performance
 - **Interactive UI**: Responsive interface with real-time Q&A generation
 - **Multi-Layer Layout**:
   - **Top Section**: Generated Q&A pairs with detailed tool information
@@ -279,6 +345,34 @@ The system includes 10 specialized financial tools:
 - **Auto-refresh**: Loads available topics and tools on startup
 - **CORS Enabled**: Seamless communication with Flask API
 - **Production Ready**: Optimized build configuration for deployment
+- **Animations Support**: Smooth UI transitions and loading states
+- **Development Server**: Auto-reload and hot module replacement
+
+### Angular Application Usage
+
+1. The application automatically loads on startup and displays available topics
+2. Enter number of Q&A pairs to generate (1-10) in the input field
+3. Click "Run Generator" button to generate new Q&A pairs
+4. View results in three organized sections:
+   - **Generated Q&A pairs** with questions, answers, and tool information
+   - **Topics used** in the current generation
+   - **Tools invoked** with usage statistics and descriptions
+5. All sections update dynamically with each new generation
+
+### Angular File Structure
+```
+angular-app/src/
+├── app/
+│   ├── app.component.ts         # Main component with generation logic
+│   ├── app.component.html       # Multi-section template layout
+│   ├── app.component.css        # Responsive styling and animations
+│   ├── app-simple.component.html # Simplified template version
+│   └── api.service.ts           # Flask API communication service
+├── index.html                   # Main HTML file with loading fallback
+├── main.ts                      # Application bootstrap with standalone config
+├── polyfills.ts                 # Browser compatibility layer
+└── styles.css                   # Global application styles
+```
 
 ## Development Notes
 
@@ -308,6 +402,11 @@ python chat_tools.py
 cd angular-app
 ng build --configuration production
 ```
+
+**Production Build Output:**
+- Built files will be in the `dist/qa-generator-app/` directory
+- Optimized bundles with tree-shaking and minification
+- Ready for deployment to web servers
 
 ### Alternative Flask Apps
 - **app.py** - Full-featured API with Azure OpenAI integration
@@ -344,6 +443,21 @@ AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4o-mini
 ```
 
 **Note**: System works with fallback responses if Azure OpenAI is not configured.
+
+## Getting Help
+
+If you continue to have issues with the Angular frontend:
+1. **Check Node.js version** is 18 or later: `node --version`
+2. **Ensure Flask API** is running on port 5000: `curl http://localhost:5000/`
+3. **Try running installation scripts** with administrator/sudo privileges
+4. **Check browser console** for JavaScript errors when the app loads
+5. **Verify CORS configuration** in Flask app if seeing network errors
+
+For backend issues:
+1. **Activate virtual environment**: `.\.venv\Scripts\Activate.ps1`
+2. **Test API directly**: `python test_api.py`
+3. **Check Azure OpenAI credentials** in `.env` file
+4. **Try simplified app**: `python simple_app.py` (no Azure dependencies)
 
 ## License
 
