@@ -17,6 +17,12 @@ import { FormsModule } from '@angular/forms';
           <button class="run-button" (click)="runGenerator()" [disabled]="isLoading">
             {{ isLoading ? 'Generating...' : 'Run Generator' }}
           </button>
+          <button class="list-button" (click)="listTopics()">
+            List Topics
+          </button>
+          <button class="list-button" (click)="listTools()">
+            List Tools
+          </button>
         </div>
       </header>
 
@@ -145,6 +151,21 @@ import { FormsModule } from '@angular/forms';
     .run-button:disabled {
       background: #6c757d;
       cursor: not-allowed;
+    }
+    
+    .list-button {
+      background: #6f42c1;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-left: 10px;
+    }
+    
+    .list-button:hover {
+      background: #5a359c;
     }
     
     .qa-section, .topics-section, .tools-section {
@@ -455,5 +476,159 @@ export class AppComponent {
     }
     
     return result;
+  }
+
+  listTopics() {
+    // Call Flask API to get topics
+    this.http.get<any>('http://localhost:5000/run_new_caller/topics_list').subscribe({
+      next: (response) => {
+        // Open new window and display raw response
+        const newWindow = window.open('', '_blank');
+        if (newWindow) {
+          newWindow.document.write(`
+            <html>
+              <head>
+                <title>List Topics - Raw Response</title>
+                <style>
+                  body {
+                    font-family: 'Courier New', monospace;
+                    padding: 20px;
+                    background-color: #f5f5f5;
+                  }
+                  pre {
+                    background-color: #ffffff;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    padding: 15px;
+                    overflow: auto;
+                  }
+                </style>
+              </head>
+              <body>
+                <h1>List Topics - Raw Response</h1>
+                <pre>${JSON.stringify(response, null, 2)}</pre>
+              </body>
+            </html>
+          `);
+          newWindow.document.close();
+        }
+      },
+      error: (error) => {
+        console.error('Error calling list_topics API:', error);
+        // Open new window and display error
+        const newWindow = window.open('', '_blank');
+        if (newWindow) {
+          newWindow.document.write(`
+            <html>
+              <head>
+                <title>List Topics - Error</title>
+                <style>
+                  body {
+                    font-family: Arial, sans-serif;
+                    padding: 20px;
+                    background-color: #f8f9fa;
+                  }
+                  .error {
+                    color: #dc3545;
+                    background-color: #f8d7da;
+                    border: 1px solid #f5c6cb;
+                    padding: 15px;
+                    border-radius: 4px;
+                  }
+                </style>
+              </head>
+              <body>
+                <h1>List Topics - Error</h1>
+                <div class="error">
+                  <strong>Error:</strong> ${error.message || 'Failed to fetch topics'}
+                  <br><br>
+                  <strong>Status:</strong> ${error.status || 'Unknown'}
+                  <br><br>
+                  <strong>Details:</strong> ${JSON.stringify(error, null, 2)}
+                </div>
+              </body>
+            </html>
+          `);
+          newWindow.document.close();
+        }
+      }
+    });
+  }
+
+  listTools() {
+    // Call Flask API to get tools
+    this.http.get<any>('http://localhost:5000/run_new_caller/tool_list').subscribe({
+      next: (response) => {
+        // Open new window and display raw response
+        const newWindow = window.open('', '_blank');
+        if (newWindow) {
+          newWindow.document.write(`
+            <html>
+              <head>
+                <title>List Tools - Raw Response</title>
+                <style>
+                  body {
+                    font-family: 'Courier New', monospace;
+                    padding: 20px;
+                    background-color: #f5f5f5;
+                  }
+                  pre {
+                    background-color: #ffffff;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    padding: 15px;
+                    overflow: auto;
+                  }
+                </style>
+              </head>
+              <body>
+                <h1>List Tools - Raw Response</h1>
+                <pre>${JSON.stringify(response, null, 2)}</pre>
+              </body>
+            </html>
+          `);
+          newWindow.document.close();
+        }
+      },
+      error: (error) => {
+        console.error('Error calling tool_list API:', error);
+        // Open new window and display error
+        const newWindow = window.open('', '_blank');
+        if (newWindow) {
+          newWindow.document.write(`
+            <html>
+              <head>
+                <title>List Tools - Error</title>
+                <style>
+                  body {
+                    font-family: Arial, sans-serif;
+                    padding: 20px;
+                    background-color: #f8f9fa;
+                  }
+                  .error {
+                    color: #dc3545;
+                    background-color: #f8d7da;
+                    border: 1px solid #f5c6cb;
+                    padding: 15px;
+                    border-radius: 4px;
+                  }
+                </style>
+              </head>
+              <body>
+                <h1>List Tools - Error</h1>
+                <div class="error">
+                  <strong>Error:</strong> ${error.message || 'Failed to fetch tools'}
+                  <br><br>
+                  <strong>Status:</strong> ${error.status || 'Unknown'}
+                  <br><br>
+                  <strong>Details:</strong> ${JSON.stringify(error, null, 2)}
+                </div>
+              </body>
+            </html>
+          `);
+          newWindow.document.close();
+        }
+      }
+    });
   }
 }

@@ -1057,7 +1057,7 @@ def get_available_tools() -> List[Dict[str, str]]:
     return [
         {
             "name": tool.name,
-            "description": tool.description
+            "description": tool.description.replace('\n', ' ')
         }
         for tool in agent.tools
     ]
