@@ -18,6 +18,7 @@ appropriate tools based on user queries.
 from json import tool
 import os
 import json
+import random
 from typing import List, Dict, Any, Optional
 try:
     # Try newer LangChain imports first
@@ -47,16 +48,35 @@ from pydantic import BaseModel, Field
 import re
 
 
-def extract_sin_number(query: str) -> str:
+def extract_sin_number(query: str, force_random: bool = False) -> str:
     """
-    Extract SIN (Social Insurance Number) from user query.
+    Extract SIN (Social Insurance Number) from user query, or generate a random one for simulation.
     
     Args:
         query (str): User's query text
+        force_random (bool): If True, always generate random SIN (for testing scenarios)
         
     Returns:
-        str: Found SIN number or 'Not provided' if none found
+        str: Found SIN number or randomly generated SIN for simulation
     """
+    print(f"🔍 DEBUG: Searching for SIN in query: '{query}' (force_random={force_random})")
+    
+    if force_random:
+        print(f"🎲 DEBUG: Force random mode - GENERATING random SIN (ignoring any SIN in query)...")
+        # Generate random SIN for simulation when none provided
+        import random
+        # Generate 9 random digits, avoiding invalid patterns
+        # Valid SIN ranges: first digit 1-9, others 0-9, avoid certain test patterns
+        first_digit = random.randint(1, 9)
+        remaining_digits = [random.randint(0, 9) for _ in range(8)]
+        
+        # Format as XXX-XXX-XXX
+        sin_digits = [first_digit] + remaining_digits
+        sin = f"{sin_digits[0]}{sin_digits[1]}{sin_digits[2]}-{sin_digits[3]}{sin_digits[4]}{sin_digits[5]}-{sin_digits[6]}{sin_digits[7]}{sin_digits[8]}"
+        
+        print(f"🎲 DEBUG: GENERATED random SIN: {sin}")
+        return sin
+    
     # SIN format: XXX-XXX-XXX or XXXXXXXXX
     sin_patterns = [
         r'\b\d{3}-\d{3}-\d{3}\b',  # XXX-XXX-XXX format
@@ -70,9 +90,104 @@ def extract_sin_number(query: str) -> str:
             # Normalize to XXX-XXX-XXX format
             if '-' not in sin:
                 sin = f"{sin[:3]}-{sin[3:6]}-{sin[6:]}"
+            print(f"✅ DEBUG: EXTRACTED existing SIN from query: {sin}")
             return sin
     
-    return "Not provided"
+    # Generate random SIN for simulation when none provided
+    import random
+    print(f"🎲 DEBUG: No SIN found in query, GENERATING random SIN...")
+    
+    # Generate 9 random digits, avoiding invalid patterns
+    # Valid SIN ranges: first digit 1-9, others 0-9, avoid certain test patterns
+    first_digit = random.randint(1, 9)
+    remaining_digits = [random.randint(0, 9) for _ in range(8)]
+    
+    # Format as XXX-XXX-XXX
+    sin_digits = [first_digit] + remaining_digits
+    sin = f"{sin_digits[0]}{sin_digits[1]}{sin_digits[2]}-{sin_digits[3]}{sin_digits[4]}{sin_digits[5]}-{sin_digits[6]}{sin_digits[7]}{sin_digits[8]}"
+    
+    print(f"🎲 DEBUG: GENERATED random SIN: {sin}")
+    return sin
+
+
+def generate_random_sin() -> str:
+    """Generate a random SIN in XXX-XXX-XXX format for testing."""
+    first_digit = random.randint(1, 9)
+    remaining_digits = [random.randint(0, 9) for _ in range(8)]
+    sin_digits = [first_digit] + remaining_digits
+    return f"{sin_digits[0]}{sin_digits[1]}{sin_digits[2]}-{sin_digits[3]}{sin_digits[4]}{sin_digits[5]}-{sin_digits[6]}{sin_digits[7]}{sin_digits[8]}"
+
+
+def generate_random_name() -> str:
+    """Generate a random realistic name for testing."""
+    first_names = [
+        "Emily", "John", "Sarah", "Michael", "Jessica", "David", "Ashley", "Christopher",
+        "Amanda", "Matthew", "Jennifer", "Joshua", "Elizabeth", "Andrew", "Stephanie",
+        "Daniel", "Nicole", "James", "Michelle", "Ryan", "Lisa", "Robert", "Angela"
+    ]
+    
+    last_names = [
+        "Thompson", "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller",
+        "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson",
+        "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin", "Lee", "Perez"
+    ]
+    
+    return f"{random.choice(first_names)} {random.choice(last_names)}"
+
+
+def generate_query_with_random_sin(query_type: str = "balance") -> str:
+    """
+    Generate a realistic test query with random SIN and name embedded.
+    
+    Args:
+        query_type: Type of query ('balance', 'payment', 'refinance', 'application', 'rates')
+        
+    Returns:
+        str: Generated query with random SIN embedded
+    """
+    name = generate_random_name()
+    sin = generate_random_sin()
+    
+    query_templates = {
+        "balance": [
+            f"My name is {name} and my SIN is {sin}. What's my current balance?",
+            f"Hi, I'm {name} with SIN {sin}. Can you check my loan balance?",
+            f"Hello, {name} here, SIN number {sin}. What do I owe on my mortgage?",
+            f"I'm {name}, SIN {sin}. What's my remaining balance?",
+            f"This is {name}, my SIN is {sin}. How much is left on my loan?"
+        ],
+        "payment": [
+            f"My name is {name} and my SIN is {sin}. When is my next payment due?",
+            f"Hi, I'm {name} with SIN {sin}. Can I increase my monthly payments?",
+            f"Hello, {name} here, SIN {sin}. What are my payment options?",
+            f"I'm {name}, SIN {sin}. Can I make extra payments?",
+            f"This is {name}, my SIN is {sin}. How can I pay more each month?"
+        ],
+        "refinance": [
+            f"My name is {name} and my SIN is {sin}. What refinancing options do I have?",
+            f"Hi, I'm {name} with SIN {sin}. Should I refinance my mortgage?",
+            f"Hello, {name} here, SIN {sin}. What are today's refinance rates?",
+            f"I'm {name}, SIN {sin}. Can I get a better rate?",
+            f"This is {name}, my SIN is {sin}. Tell me about refinancing."
+        ],
+        "application": [
+            f"My name is {name} and my SIN is {sin}. What's my application status?",
+            f"Hi, I'm {name} with SIN {sin}. How is my loan application doing?",
+            f"Hello, {name} here, SIN {sin}. Do you need more documents?",
+            f"I'm {name}, SIN {sin}. When will my application be approved?",
+            f"This is {name}, my SIN is {sin}. What documents do I still need?"
+        ],
+        "rates": [
+            f"My name is {name} and my SIN is {sin}. What's my current interest rate?",
+            f"Hi, I'm {name} with SIN {sin}. What are today's mortgage rates?",
+            f"Hello, {name} here, SIN {sin}. Can I lock in a rate?",
+            f"I'm {name}, SIN {sin}. What rate quotes are available?",
+            f"This is {name}, my SIN is {sin}. Show me current rates."
+        ]
+    }
+    
+    templates = query_templates.get(query_type, query_templates["balance"])
+    return random.choice(templates)
 
 
 class FinancialQueryInput(BaseModel):
@@ -148,14 +263,6 @@ class PaymentIncreaseTool(BaseTool):
         interest_saved = random.randint(15000, 85000)
         
         result = f"PAYUP: [SIN: {sin_number}] Current payment: ${current_payment:,}. Proposed increase: +${increase_amount:,} = ${new_payment:,}/month. This would save {years_saved} years and ${interest_saved:,} in interest."
-        print(f"🔧 DEBUG: Returning result: {result}")
-        return result
-        increase_amount = random.randint(100, 500)
-        new_payment = current_payment + increase_amount
-        years_saved = round(random.uniform(2.5, 8.5), 1)
-        interest_saved = random.randint(15000, 85000)
-        
-        result = f"PAYUP: Current payment: ${current_payment:,}. Proposed increase: +${increase_amount:,} = ${new_payment:,}/month. This would save {years_saved} years and ${interest_saved:,} in interest."
         print(f"🔧 DEBUG: Returning result: {result}")
         return result
     

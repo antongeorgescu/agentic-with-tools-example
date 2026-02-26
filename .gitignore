@@ -188,3 +188,4 @@ config.json
 *.orig
 
 TEMP.md
+tests/

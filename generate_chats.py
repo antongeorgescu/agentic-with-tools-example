@@ -159,7 +159,7 @@ class ChatGenerator:
 Generate ONE realistic customer question and ONE professional advisor response based on the given topic.
 
 Requirements:
-- Question: Should sound like a real customer inquiry, conversational and specific. Always start with a fictional user introduction that includes a completely made‑up full name and a synthetic SIN in Canadian SIN format that fails the Luhn checksum. Use a newly generated SIN for every newly generated question.
+- Question: Should sound like a real customer inquiry, conversational and specific. Always start with a fictional user introduction that includes a completely made‑up full name and a randomly generated synthetic SIN in Canadian SIN format that fails the Luhn checksum.
 - Answer: Should be helpful, professional, and include specific details (amounts, dates, percentages when appropriate) Do not use any greetings or chitchat. Focus on providing clear and concise information relevant to the customer's question.
 - Use realistic financial figures (loan amounts, interest rates, payment amounts, etc.)
 - Keep responses focused and practical
@@ -188,6 +188,12 @@ Format your response as JSON:
             try:
                 # Try to parse JSON response
                 qa_data = json.loads(content)
+                # Replace SIN in question with generated random SIN
+                if "question" in qa_data:
+                    # Use the SIN generation function from chat_tools
+                    qa_data["question"] = self._replace_sin_in_question(
+                        qa_data["question"]
+                    )
                 return {
                     "question": qa_data.get("question", "Generated question"),
                     "answer": qa_data.get("answer", "Generated answer")
@@ -255,6 +261,33 @@ Format your response as JSON:
             summary = f"{original_answer}\n\nAccount details: {tool_return}"
         
         return summary
+
+    def _replace_sin_in_question(self, question: str) -> str:
+        """
+        Replace any existing SIN in question text with a randomly generated one.
+        
+        Args:
+            question: The question text that may contain a SIN
+            
+        Returns:
+            str: Question with SIN replaced by random generated SIN
+        """
+        import re
+        # Use the SIN generation function from chat_tools
+        new_sin = chat_tools.generate_random_sin()
+        
+        # Replace any existing SIN patterns with the new random SIN
+        # SIN format: XXX-XXX-XXX or XXXXXXXXX
+        sin_patterns = [
+            r'\b\d{3}-\d{3}-\d{3}\b',  # XXX-XXX-XXX format
+            r'\b\d{9}\b'               # XXXXXXXXX format (9 consecutive digits)
+        ]
+        
+        modified_question = question
+        for pattern in sin_patterns:
+            modified_question = re.sub(pattern, new_sin, modified_question)
+        
+        return modified_question
 
     def print_qa_pairs(self, result: Dict[str, Any]):
         """Print Q&A pairs to console in a formatted way."""
