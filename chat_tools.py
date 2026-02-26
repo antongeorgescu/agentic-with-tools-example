@@ -1,5 +1,32 @@
 #!/usr/bin/env python3
 # pylint: skip-file
+
+import os
+from pathlib import Path
+
+# Load environment variables from .env file
+def load_dotenv():
+    """Load environment variables from .env file for consistent configuration."""
+    env_file = Path(".env")
+    if env_file.exists():
+        with open(env_file, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    value = value.strip('"\'')
+                    os.environ[key] = value
+
+# Load environment at module level
+load_dotenv()
+
+# Apply consistent random seed for production mode
+if os.getenv("DEBUG_MODE", "false").lower() == "false":
+    import random
+    seed_value = int(os.getenv("RANDOM_SEED", "42"))
+    random.seed(seed_value)
+    print(f"🎲 Applied consistent random seed: {seed_value}")
+
 """
 LangChain Agent-Based Chat Tools for Financial Topics
 ====================================================
@@ -41,30 +68,65 @@ except ImportError:
         print(f"Import error: {e}")
         # Create mock classes for testing
         class MockLLM:
-            pass
+            def __init__(self, *args, **kwargs):
+                pass
+        class MockTool:
+            def __init__(self, *args, **kwargs):
+                pass
+        class MockBaseTool:
+            def __init__(self, *args, **kwargs):
+                pass
+        class MockMessage:
+            def __init__(self, *args, **kwargs):
+                pass
+        class MockMemory:
+            def __init__(self, *args, **kwargs):
+                pass
+        class MockPromptTemplate:
+            def __init__(self, *args, **kwargs):
+                pass
+            @classmethod
+            def from_messages(cls, *args, **kwargs):
+                return cls()
         AzureChatOpenAI = MockLLM
+        Tool = MockTool
+        BaseTool = MockBaseTool
+        BaseMessage = MockMessage
+        ConversationBufferMemory = MockMemory
+        ChatPromptTemplate = MockPromptTemplate
+        MessagesPlaceholder = MockPromptTemplate
         
 from pydantic import BaseModel, Field
 import re
 
 
-def extract_sin_number(query: str, force_random: bool = False) -> str:
+def extract_sin_number(query: str, force_random: bool = None) -> str:
     """
     Extract SIN (Social Insurance Number) from user query, or generate a random one for simulation.
     
     Args:
         query (str): User's query text
         force_random (bool): If True, always generate random SIN (for testing scenarios)
+                           If None, uses FORCE_RANDOM_SIN environment variable
         
     Returns:
         str: Found SIN number or randomly generated SIN for simulation
     """
+    # Check environment variable if force_random not explicitly set
+    if force_random is None:
+        force_random = os.getenv("FORCE_RANDOM_SIN", "false").lower() == "true"
+    
     print(f"🔍 DEBUG: Searching for SIN in query: '{query}' (force_random={force_random})")
     
     if force_random:
         print(f"🎲 DEBUG: Force random mode - GENERATING random SIN (ignoring any SIN in query)...")
         # Generate random SIN for simulation when none provided
         import random
+        # Apply consistent seed if DEBUG_MODE is false
+        if os.getenv("DEBUG_MODE", "false").lower() == "false":
+            seed_value = int(os.getenv("RANDOM_SEED", "42"))
+            random.seed(seed_value)
+        
         # Generate 9 random digits, avoiding invalid patterns
         # Valid SIN ranges: first digit 1-9, others 0-9, avoid certain test patterns
         first_digit = random.randint(1, 9)
@@ -97,6 +159,11 @@ def extract_sin_number(query: str, force_random: bool = False) -> str:
     import random
     print(f"🎲 DEBUG: No SIN found in query, GENERATING random SIN...")
     
+    # Apply consistent seed if DEBUG_MODE is false
+    if os.getenv("DEBUG_MODE", "false").lower() == "false":
+        seed_value = int(os.getenv("RANDOM_SEED", "42"))
+        random.seed(seed_value)
+    
     # Generate 9 random digits, avoiding invalid patterns
     # Valid SIN ranges: first digit 1-9, others 0-9, avoid certain test patterns
     first_digit = random.randint(1, 9)
@@ -112,6 +179,11 @@ def extract_sin_number(query: str, force_random: bool = False) -> str:
 
 def generate_random_sin() -> str:
     """Generate a random SIN in XXX-XXX-XXX format for testing."""
+    # Apply consistent seed if DEBUG_MODE is false
+    if os.getenv("DEBUG_MODE", "false").lower() == "false":
+        seed_value = int(os.getenv("RANDOM_SEED", "42"))
+        random.seed(seed_value)
+    
     first_digit = random.randint(1, 9)
     remaining_digits = [random.randint(0, 9) for _ in range(8)]
     sin_digits = [first_digit] + remaining_digits
@@ -816,28 +888,28 @@ class FinancialChatAgent:
             (["application status", "loan application", "apply for", "applying for", "submit application", "application documents", "income verification", "credit check", "document submission", "verification process", "documents i need", "what documents", "paperwork needed", "renewal documents"], "application_tool", "Function that handles the loan application process, with parameters extracted from the user query. Topics include application steps, required documents, and approval timelines."),
             
             # Refinancing - check before general rate questions - ADD RENEWAL TERMS
-            (["refinance", "refi", "consolidation", "refinancing rate", "should i refinance", "renew mortgage", "renewing mortgage", "mortgage renewal", "renewal options", "renew my mortgage", "mortgage term", "end of term", "new rate offers", "rate offers"], "refinancing_tool", "Function that handles refinancing options, with parameters extracted from the user query. Topics include refinancing eligibility, rate comparison, and application process."),
+            (["refinance", "refi", "consolidation", "refinancing rate", "should i refinance", "renew mortgage", "renewing mortgage", "mortgage renewal", "renewal options", "renew my mortgage", "mortgage term", "end of term", "new rate offers", "rate offers", "breaking my mortgage", "break my mortgage", "prepayment penalty", "prepayment penalties", "interest rate differential", "ird", "breaking mortgage early", "break mortgage early", "early termination", "mortgage penalty"], "refinancing_tool", "Function that handles refinancing options, with parameters extracted from the user query. Topics include refinancing eligibility, rate comparison, and application process."),
             
             # Hardship - very specific context - ADD MORE HARDSHIP VARIATIONS
-            (["hardship", "financial difficulty", "financial difficulties", "can't pay", "won't be able to make", "struggling with payments", "payment help", "defer payment", "forbearance", "facing difficulties", "financial troubles", "can't afford", "unable to pay"], "hardship_tool", "Function that handles financial hardship assistance, with parameters extracted from the user query. Topics include deferment options, payment plans, and eligibility criteria."),
+            (["hardship", "financial difficulty", "financial difficulties", "tough situation", "difficult situation", "can't pay", "can't make", "can't make payments", "won't be able to make", "won't be able to pay", "unable to make payments", "struggling with payments", "struggling to make", "struggling financially", "payment help", "defer payment", "forbearance", "facing difficulties", "financial troubles", "can't afford", "unable to pay"], "hardship_tool", "Function that handles financial hardship assistance, with parameters extracted from the user query. Topics include deferment options, payment plans, and eligibility criteria."),
             
-            # Missed payments - specific context - ADD MORE PAYMENT VARIATIONS  
-            (["missed payment", "miss payment", "miss these payments", "miss my payments", "late payment", "payment late", "late fee", "missed a payment", "behind on payments", "overdue payment", "payment penalty", "late payment penalty", "penalties", "repercussions", "consequences", "skip payment"], "missed_payment_tool", "Function that handles missed payment penalties, with parameters extracted from the user query. Topics include late fees, penalty calculations, and payment recovery options."),
-            
-            # Payment increase - be more specific about payment modifications  
-            (["increase payment", "pay more", "higher payment", "additional payment", "extra payment", "boost payment", "raise payment"], "payment_increase_tool", "Function that handles payment increase scenarios, with parameters extracted from the user query. Topics include increasing monthly payments, adjusting payment schedules, and calculating new payment amounts."),
-            
-            # Lump sum - specific payment type
+            # Lump sum - specific payment type (moved before missed payments for priority)
             (["lump sum", "lump-sum", "one-time payment", "extra principal", "additional principal", "bulk payment", "large payment"], "lump_sum_tool", "Function that handles lump-sum payment options, with parameters extracted from the user query. Topics include making additional payments, reducing principal, and calculating interest savings."),
             
-            # Interest rates - be more specific to avoid conflicts - EXPAND WITH MORE RATE TERMS
-            (["interest rate", "current rate", "apr", "what rate", "rate comparison", "my rate", "loan rate", "rate quotes", "interest quotes", "mortgage rate", "fixed rate", "variable rate", "promotional rate", "promotional rates", "rate options", "rate-lock", "lock period", "rate lock", "fixed or variable", "mortgage rates", "current rates", "best rates", "today's rates", "rate information"], "interest_rate_tool", "Function that provides interest rate information, with parameters extracted from the user query. Topics include current rates, rate changes, and comparison of different rate options."),
+            # Missed payments - specific context - MORE SPECIFIC PENALTY KEYWORDS  
+            (["missed payment", "miss payment", "miss my payment", "miss these payments", "miss my payments", "what happens if i miss", "if i miss my payment", "late payment", "payment late", "late fee", "missed a payment", "behind on payments", "overdue payment", "payment penalty", "late payment penalty", "penalties will i face", "what penalties", "repercussions", "consequences", "skip payment"], "missed_payment_tool", "Function that handles missed payment penalties, with parameters extracted from the user query. Topics include late fees, penalty calculations, and payment recovery options."),
+            
+            # Payment increase - be more specific about payment modifications  
+            (["increase payment", "increase my payment", "increase my monthly payment", "increase payment to", "increase my payment by", "how much I can increase", "how much can I increase", "if I increase my payment", "pay more", "higher payment", "additional payment", "extra payment", "boost payment", "raise payment"], "payment_increase_tool", "Function that handles payment increase scenarios, with parameters extracted from the user query. Topics include increasing monthly payments, adjusting payment schedules, and calculating new payment amounts."),
+            
+            # Balance - prioritize balance queries over rate information
+            (["loan balance", "current balance", "balance", "my balance", "owe on loan", "remaining balance", "balance left", "payoff amount", "principal balance", "final payment", "last payment", "when will i pay off", "payoff date", "final payment due", "payment schedule"], "balance_tool", "Function that handles balance and payment date inquiries, with parameters extracted from the user query. Topics include current loan balance, final payment dates, payment schedules, and remaining balance information."),
+            
+            # Interest rates - more specific keywords to avoid conflicts with balance queries
+            (["what is my rate", "what's my rate", "what is my current interest rate", "what's my current interest rate", "current interest rate", "my current interest rate", "current rate only", "my interest rate", "my current rate", "interest rate only", "rate information", "apr only", "rate comparison", "rate quotes", "interest quotes", "rate options", "rate-lock", "lock period", "rate lock", "fixed or variable", "mortgage rates today", "best rates", "today's rates", "rate changes"], "interest_rate_tool", "Function that provides interest rate information, with parameters extracted from the user query. Topics include current rates, rate changes, and comparison of different rate options."),
             
             # Insurance and escrow - specific terms
-            (["insurance", "escrow", "property tax", "homeowners insurance", "insurance premium", "escrow account", "tax escrow"], "insurance_tool", "Function that handles insurance and escrow matters, with parameters extracted from the user query. Topics include policy details, escrow accounts, and property tax information."),
-            
-            # Balance - be much more specific with balance-related terms
-            (["loan balance", "current balance", "owe on loan", "remaining balance", "balance left", "payoff amount", "principal balance"], "balance_tool", "Function that handles balance and payment date inquiries, with parameters extracted from the user query. Topics include current loan balance, final payment dates, payment schedules, and remaining balance information.")
+            (["insurance", "escrow", "property tax", "homeowners insurance", "insurance premium", "escrow account", "tax escrow"], "insurance_tool", "Function that handles insurance and escrow matters, with parameters extracted from the user query. Topics include policy details, escrow accounts, and property tax information.")
         ]
         
         # Check each mapping - using more precise matching

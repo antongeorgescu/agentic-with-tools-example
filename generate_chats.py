@@ -1,5 +1,32 @@
 #!/usr/bin/env python3
 # pylint: skip-file
+
+import os
+from pathlib import Path
+
+# Load environment variables from .env file
+def load_dotenv():
+    """Load environment variables from .env file for consistent configuration."""
+    env_file = Path(".env")
+    if env_file.exists():
+        with open(env_file, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    value = value.strip('"\'')
+                    os.environ[key] = value
+
+# Load environment at module level
+load_dotenv()
+
+# Apply consistent random seed for production mode
+if os.getenv("DEBUG_MODE", "false").lower() == "false":
+    import random
+    seed_value = int(os.getenv("RANDOM_SEED", "42"))
+    random.seed(seed_value)
+    print(f"🎲 Applied consistent random seed: {seed_value}")
+
 """
 Generate Chat Q&A Pairs using Azure OpenAI
 ==========================================
@@ -28,6 +55,17 @@ import chat_tools
 warnings.filterwarnings("ignore", category=UserWarning, message=".*LLM.*")
 warnings.filterwarnings("ignore", category=UserWarning, message=".*code injection.*")
 warnings.filterwarnings("ignore", category=UserWarning, message=".*XSS.*")
+
+# Initialize consistent random seed from environment or default
+def initialize_random_seed():
+    """Initialize random seed for consistent results across debug/production."""
+    seed_value = int(os.getenv("RANDOM_SEED", "42"))
+    random.seed(seed_value)
+    print(f"🎲 Initialized random seed: {seed_value}")
+    return seed_value
+
+# Apply seed initialization at module level
+initialize_random_seed()
 
 
 class ChatGenerator:

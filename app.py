@@ -1,5 +1,32 @@
 #!/usr/bin/env python3
 # pylint: skip-file
+
+import os
+from pathlib import Path
+
+# Load environment variables from .env file
+def load_dotenv():
+    """Load environment variables from .env file for consistent configuration."""
+    env_file = Path(".env")
+    if env_file.exists():
+        with open(env_file, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    value = value.strip('"\'')
+                    os.environ[key] = value
+
+# Load environment at module level
+load_dotenv()
+
+# Apply consistent random seed for production mode
+if os.getenv("DEBUG_MODE", "false").lower() == "false":
+    import random
+    seed_value = int(os.getenv("RANDOM_SEED", "42"))
+    random.seed(seed_value)
+    print(f"🎲 Applied consistent random seed: {seed_value}")
+
 """
 Flask API for Chat Q&A Pairs Generation
 =======================================
