@@ -44,6 +44,35 @@ except ImportError:
         AzureChatOpenAI = MockLLM
         
 from pydantic import BaseModel, Field
+import re
+
+
+def extract_sin_number(query: str) -> str:
+    """
+    Extract SIN (Social Insurance Number) from user query.
+    
+    Args:
+        query (str): User's query text
+        
+    Returns:
+        str: Found SIN number or 'Not provided' if none found
+    """
+    # SIN format: XXX-XXX-XXX or XXXXXXXXX
+    sin_patterns = [
+        r'\b\d{3}-\d{3}-\d{3}\b',  # XXX-XXX-XXX format
+        r'\b\d{9}\b'               # XXXXXXXXX format (9 consecutive digits)
+    ]
+    
+    for pattern in sin_patterns:
+        match = re.search(pattern, query)
+        if match:
+            sin = match.group()
+            # Normalize to XXX-XXX-XXX format
+            if '-' not in sin:
+                sin = f"{sin[:3]}-{sin[3:6]}-{sin[6:]}"
+            return sin
+    
+    return "Not provided"
 
 
 class FinancialQueryInput(BaseModel):
@@ -66,10 +95,14 @@ class BalanceTool(BaseTool):
         print(f"🔧 DEBUG: BalanceTool._run called with query: {userQuery}")
         print(f"🔧 DEBUG: About to return balance result...")
         
+        # Extract SIN number from user query
+        sin_number = extract_sin_number(userQuery)
+        print(f"🔧 DEBUG: Extracted SIN: {sin_number}")
+        
         # TODO: Add actual processing logic here
         # Example of what real implementation might look like:
         # 1. Parse user query for account/loan identifiers
-        # 2. Call external API or database to get balance
+        # 2. Call external API or database to get balance using SIN
         # 3. Format and return real data
         
         # Simulate some business logic
@@ -77,7 +110,7 @@ class BalanceTool(BaseTool):
         simulated_balance = random.randint(50000, 500000)
         simulated_next_payment = "March 15, 2026"
         
-        result = f"BALNC: Current loan balance: ${simulated_balance:,}. Next payment due: {simulated_next_payment}"
+        result = f"BALNC: [SIN: {sin_number}] Current loan balance: ${simulated_balance:,}. Next payment due: {simulated_next_payment}"
         print(f"🔧 DEBUG: Returning result: {result}")
         return result
     
@@ -99,12 +132,24 @@ class PaymentIncreaseTool(BaseTool):
         print(f"🔧 DEBUG: PaymentIncreaseTool._run called with query: {userQuery}")
         print(f"🔧 DEBUG: About to return payment increase result...")
         
+        # Extract SIN number from user query
+        sin_number = extract_sin_number(userQuery)
+        print(f"🔧 DEBUG: Extracted SIN: {sin_number}")
+        
         # TODO: Add actual processing logic here
         # Example: Parse user query for payment amounts, calculate scenarios
         
         # Simulate some business logic
         import random
         current_payment = random.randint(1200, 3500)
+        increase_amount = random.randint(100, 500)
+        new_payment = current_payment + increase_amount
+        years_saved = round(random.uniform(2.5, 8.5), 1)
+        interest_saved = random.randint(15000, 85000)
+        
+        result = f"PAYUP: [SIN: {sin_number}] Current payment: ${current_payment:,}. Proposed increase: +${increase_amount:,} = ${new_payment:,}/month. This would save {years_saved} years and ${interest_saved:,} in interest."
+        print(f"🔧 DEBUG: Returning result: {result}")
+        return result
         increase_amount = random.randint(100, 500)
         new_payment = current_payment + increase_amount
         years_saved = round(random.uniform(2.5, 8.5), 1)
@@ -132,6 +177,10 @@ class LumpSumTool(BaseTool):
         print(f"🔧 DEBUG: LumpSumTool._run called with query: {userQuery}")
         print(f"🔧 DEBUG: About to return lump-sum payment result...")
         
+        # Extract SIN number from user query
+        sin_number = extract_sin_number(userQuery)
+        print(f"🔧 DEBUG: Extracted SIN: {sin_number}")
+        
         # TODO: Add actual processing logic here
         # Example: Calculate impact of lump-sum payments on loan term and interest
         
@@ -143,7 +192,7 @@ class LumpSumTool(BaseTool):
         interest_saved = random.randint(8000, 45000)
         new_payoff_date = "September 2029" if years_saved > 3 else "March 2031"
         
-        result = f"LUMPD: Lump-sum payment of ${suggested_amount:,} would reduce your ${current_balance:,} balance, saving {years_saved} years and ${interest_saved:,} in interest. New payoff date: {new_payoff_date}."
+        result = f"LUMPD: [SIN: {sin_number}] Lump-sum payment of ${suggested_amount:,} would reduce your ${current_balance:,} balance, saving {years_saved} years and ${interest_saved:,} in interest. New payoff date: {new_payoff_date}."
         print(f"🔧 DEBUG: Returning result: {result}")
         return result
     
@@ -166,6 +215,10 @@ class InterestRateTool(BaseTool):
         print(f"🔧 DEBUG: InterestRateTool._run called with query: {userQuery}")
         print(f"🔧 DEBUG: About to return interest rate result...")
         
+        # Extract SIN number from user query
+        sin_number = extract_sin_number(userQuery)
+        print(f"🔧 DEBUG: Extracted SIN: {sin_number}")
+        
         # TODO: Add actual processing logic here
         # Example: Get current market rates, compare with user's rate
         
@@ -178,7 +231,7 @@ class InterestRateTool(BaseTool):
         
         comparison = "below" if current_rate < market_rate else "above" if current_rate > market_rate else "at"
         
-        result = f"RATES: Your current {rate_type} rate is {current_rate}% ({comparison} market average of {market_rate}%). Total interest over loan term: ${total_interest:,}."
+        result = f"RATES: [SIN: {sin_number}] Your current {rate_type} rate is {current_rate}% ({comparison} market average of {market_rate}%). Total interest over loan term: ${total_interest:,}."
         print(f"🔧 DEBUG: Returning result: {result}")
         return result
     
@@ -200,6 +253,10 @@ class MissedPaymentTool(BaseTool):
         print(f"🔧 DEBUG: MissedPaymentTool._run called with query: {userQuery}")
         print(f"🔧 DEBUG: About to return missed payment result...")
         
+        # Extract SIN number from user query
+        sin_number = extract_sin_number(userQuery)
+        print(f"🔧 DEBUG: Extracted SIN: {sin_number}")
+        
         # TODO: Add actual processing logic here
         # Example: Calculate late fees, check payment history, offer assistance
         
@@ -215,7 +272,7 @@ class MissedPaymentTool(BaseTool):
         else:
             status = f"${late_fee} late fee applied"
         
-        result = f"MISSP: Payment is {days_late} days late ({status}). Next payment due: {next_payment_due}. Contact us within 10 days to discuss payment assistance options."
+        result = f"MISSP: [SIN: {sin_number}] Payment is {days_late} days late ({status}). Next payment due: {next_payment_due}. Contact us within 10 days to discuss payment assistance options."
         print(f"🔧 DEBUG: Returning result: {result}")
         return result
     
@@ -237,6 +294,10 @@ class PreApprovalTool(BaseTool):
         print(f"🔧 DEBUG: PreApprovalTool._run called with query: {userQuery}")
         print(f"🔧 DEBUG: About to return pre-approval result...")
         
+        # Extract SIN number from user query
+        sin_number = extract_sin_number(userQuery)
+        print(f"🔧 DEBUG: Extracted SIN: {sin_number}")
+        
         # TODO: Add actual processing logic here
         # Example: Check credit requirements, income verification, documentation needed
         
@@ -251,7 +312,7 @@ class PreApprovalTool(BaseTool):
             "Income documentation, credit authorization, property information"
         ])
         
-        result = f"PREAP: Pre-approval available up to ${max_approval:,} (min. credit score: {credit_score_req}). Processing time: {processing_time}. Required documents: {documents_needed}."
+        result = f"PREAP: [SIN: {sin_number}] Pre-approval available up to ${max_approval:,} (min. credit score: {credit_score_req}). Processing time: {processing_time}. Required documents: {documents_needed}."
         print(f"🔧 DEBUG: Returning result: {result}")
         return result
     
@@ -274,6 +335,10 @@ class ApplicationTool(BaseTool):
         print(f"🔧 DEBUG: ApplicationTool._run called with query: {userQuery}")
         print(f"🔧 DEBUG: About to return application result...")
         
+        # Extract SIN number from user query
+        sin_number = extract_sin_number(userQuery)
+        print(f"🔧 DEBUG: Extracted SIN: {sin_number}")
+        
         # TODO: Add actual processing logic here
         # Example: Track application status, required documents, next steps
         
@@ -292,7 +357,7 @@ class ApplicationTool(BaseTool):
         else:
             next_step = "Continue monitoring application progress"
         
-        result = f"APPLI: Application #{app_number} status: {app_status}. Estimated closing: {estimated_close}. Next step: {next_step}."
+        result = f"APPLI: [SIN: {sin_number}] Application #{app_number} status: {app_status}. Estimated closing: {estimated_close}. Next step: {next_step}."
         print(f"🔧 DEBUG: Returning result: {result}")
         return result
     
@@ -315,6 +380,10 @@ class RefinancingTool(BaseTool):
         print(f"🔧 DEBUG: RefinancingTool._run called with query: {userQuery}")
         print(f"🔧 DEBUG: About to return refinancing result...")
         
+        # Extract SIN number from user query
+        sin_number = extract_sin_number(userQuery)
+        print(f"🔧 DEBUG: Extracted SIN: {sin_number}")
+        
         # TODO: Add actual processing logic here
         # Example: Compare current vs. new rates, calculate break-even, assess equity
         
@@ -328,7 +397,7 @@ class RefinancingTool(BaseTool):
         home_value = random.randint(300000, 750000)
         equity_percent = random.randint(15, 45)
         
-        result = f"REFIN: Refinance from {current_rate}% to {new_rate}% could save ${monthly_savings:,}/month. Closing costs: ${closing_costs:,} (break-even: {break_even_months} months). Home value: ${home_value:,} ({equity_percent}% equity)."
+        result = f"REFIN: [SIN: {sin_number}] Refinance from {current_rate}% to {new_rate}% could save ${monthly_savings:,}/month. Closing costs: ${closing_costs:,} (break-even: {break_even_months} months). Home value: ${home_value:,} ({equity_percent}% equity)."
         print(f"🔧 DEBUG: Returning result: {result}")
         return result
     
@@ -351,6 +420,10 @@ class HardshipTool(BaseTool):
         print(f"🔧 DEBUG: HardshipTool._run called with query: {userQuery}")
         print(f"🔧 DEBUG: About to return hardship assistance result...")
         
+        # Extract SIN number from user query
+        sin_number = extract_sin_number(userQuery)
+        print(f"🔧 DEBUG: Extracted SIN: {sin_number}")
+        
         # TODO: Add actual processing logic here
         # Example: Assess hardship situation, available assistance programs, eligibility
         
@@ -372,7 +445,7 @@ class HardshipTool(BaseTool):
         ])
         contact_deadline = "within 10 business days"
         
-        result = f"HELPD: Available assistance: {selected_option}. Eligibility: {eligibility_req}. Please contact our hardship department {contact_deadline} to begin the process."
+        result = f"HELPD: [SIN: {sin_number}] Available assistance: {selected_option}. Eligibility: {eligibility_req}. Please contact our hardship department {contact_deadline} to begin the process."
         print(f"🔧 DEBUG: Returning result: {result}")
         return result
     
@@ -395,6 +468,10 @@ class InsuranceTool(BaseTool):
         print(f"🔧 DEBUG: InsuranceTool._run called with query: {userQuery}")
         print(f"🔧 DEBUG: About to return insurance/escrow result...")
         
+        # Extract SIN number from user query
+        sin_number = extract_sin_number(userQuery)
+        print(f"🔧 DEBUG: Extracted SIN: {sin_number}")
+        
         # TODO: Add actual processing logic here
         # Example: Check escrow balances, insurance requirements, policy details
         
@@ -413,7 +490,7 @@ class InsuranceTool(BaseTool):
             "Premium increase detected - escrow adjustment pending"
         ])
         
-        result = f"INSUR: Escrow balance: ${escrow_balance:,}. Monthly escrow: ${monthly_escrow:,} (Insurance: ${insurance_premium:,}/year, Taxes: ${property_tax:,}/year). Status: {insurance_status}. Next analysis: {next_analysis_date}."
+        result = f"INSUR: [SIN: {sin_number}] Escrow balance: ${escrow_balance:,}. Monthly escrow: ${monthly_escrow:,} (Insurance: ${insurance_premium:,}/year, Taxes: ${property_tax:,}/year). Status: {insurance_status}. Next analysis: {next_analysis_date}."
         print(f"🔧 DEBUG: Returning result: {result}")
         return result
     

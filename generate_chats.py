@@ -159,7 +159,7 @@ class ChatGenerator:
 Generate ONE realistic customer question and ONE professional advisor response based on the given topic.
 
 Requirements:
-- Question: Should sound like a real customer inquiry, conversational and specific. Avoid using any greetings.
+- Question: Should sound like a real customer inquiry, conversational and specific. Always start with a fictional user introduction that includes a completely made‑up full name and a synthetic SIN in Canadian SIN format that fails the Luhn checksum. Use a newly generated SIN for every newly generated question.
 - Answer: Should be helpful, professional, and include specific details (amounts, dates, percentages when appropriate) Do not use any greetings or chitchat. Focus on providing clear and concise information relevant to the customer's question.
 - Use realistic financial figures (loan amounts, interest rates, payment amounts, etc.)
 - Keep responses focused and practical
