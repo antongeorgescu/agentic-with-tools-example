@@ -1,4 +1,4 @@
-# Q&A Generator with Tools - Flask API + Angular Frontend
+# Gen-AI Q&A Generator with Tools - Powered by Flask API and Angular Frontend
 
 This project provides a comprehensive Q&A generation system for financial domain queries with:
 - **Flask API**: Generates question/answer pairs using Azure OpenAI and LangChain tools
