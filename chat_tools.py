@@ -115,11 +115,13 @@ def extract_sin_number(query: str, force_random: bool = None) -> str:
     # Check environment variable if force_random not explicitly set
     if force_random is None:
         force_random = os.getenv("FORCE_RANDOM_SIN", "false").lower() == "true"
-    
-    print(f"🔍 DEBUG: Searching for SIN in query: '{query}' (force_random={force_random})")
-    
+
+    if os.getenv("DEBUG_MODE", "false").lower() == "true":
+        print(f"🔍 DEBUG: Searching for SIN in query: '{query}' (force_random={force_random})")
+
     if force_random:
-        print(f"🎲 DEBUG: Force random mode - GENERATING random SIN (ignoring any SIN in query)...")
+        if os.getenv("DEBUG_MODE", "false").lower() == "true":
+            print(f"🎲 DEBUG: Force random mode - GENERATING random SIN (ignoring any SIN in query)...")
         # Generate random SIN for simulation when none provided
         import random
         # Apply consistent seed if DEBUG_MODE is false
@@ -136,7 +138,8 @@ def extract_sin_number(query: str, force_random: bool = None) -> str:
         sin_digits = [first_digit] + remaining_digits
         sin = f"{sin_digits[0]}{sin_digits[1]}{sin_digits[2]}-{sin_digits[3]}{sin_digits[4]}{sin_digits[5]}-{sin_digits[6]}{sin_digits[7]}{sin_digits[8]}"
         
-        print(f"🎲 DEBUG: GENERATED random SIN: {sin}")
+        if os.getenv("DEBUG_MODE", "false").lower() == "true":
+            print(f"🎲 DEBUG: GENERATED random SIN: {sin}")
         return sin
     
     # SIN format: XXX-XXX-XXX or XXXXXXXXX
@@ -152,12 +155,14 @@ def extract_sin_number(query: str, force_random: bool = None) -> str:
             # Normalize to XXX-XXX-XXX format
             if '-' not in sin:
                 sin = f"{sin[:3]}-{sin[3:6]}-{sin[6:]}"
-            print(f"✅ DEBUG: EXTRACTED existing SIN from query: {sin}")
+            if os.getenv("DEBUG_MODE", "false").lower() == "true":
+                print(f"✅ DEBUG: EXTRACTED existing SIN from query: {sin}")
             return sin
     
     # Generate random SIN for simulation when none provided
     import random
-    print(f"🎲 DEBUG: No SIN found in query, GENERATING random SIN...")
+    if os.getenv("DEBUG_MODE", "false").lower() == "true":
+        print(f"🎲 DEBUG: No SIN found in query, GENERATING random SIN...")
     
     # Apply consistent seed if DEBUG_MODE is false
     if os.getenv("DEBUG_MODE", "false").lower() == "false":
@@ -173,9 +178,8 @@ def extract_sin_number(query: str, force_random: bool = None) -> str:
     sin_digits = [first_digit] + remaining_digits
     sin = f"{sin_digits[0]}{sin_digits[1]}{sin_digits[2]}-{sin_digits[3]}{sin_digits[4]}{sin_digits[5]}-{sin_digits[6]}{sin_digits[7]}{sin_digits[8]}"
     
-    print(f"🎲 DEBUG: GENERATED random SIN: {sin}")
-    return sin
-
+    if os.getenv("DEBUG_MODE", "false").lower() == "true":
+        print(f"🎲 DEBUG: GENERATED random SIN: {sin}")
 
 def generate_random_sin() -> str:
     """Generate a random SIN in XXX-XXX-XXX format for testing."""
@@ -279,8 +283,9 @@ class BalanceTool(BaseTool):
 
     def _run(self, userQuery: str) -> str:
         # Process balance-related queries
-        print(f"🔧 DEBUG: BalanceTool._run called with query: {userQuery}")
-        print(f"🔧 DEBUG: About to return balance result...")
+        if os.getenv("DEBUG_MODE", "false").lower() == "true":
+            print(f"🔧 DEBUG: BalanceTool._run called with query: {userQuery}")
+            print(f"🔧 DEBUG: About to return balance result...")
         
         # Extract SIN number from user query
         sin_number = extract_sin_number(userQuery)

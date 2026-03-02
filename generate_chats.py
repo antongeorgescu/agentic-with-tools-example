@@ -3,6 +3,7 @@
 
 import os
 from pathlib import Path
+from openai import OpenAI
 
 # Load environment variables from .env file
 def load_dotenv():
@@ -47,11 +48,19 @@ import random
 import argparse
 from typing import List, Dict, Any
 from openai import AzureOpenAI
+import openai
 
 # Suppress additional security warnings for AI-generated content
 import warnings
 
-import chat_tools
+try:
+    import chat_tools
+    CHAT_TOOLS_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: chat_tools not available: {e}")
+    CHAT_TOOLS_AVAILABLE = False
+    chat_tools = None
+    
 warnings.filterwarnings("ignore", category=UserWarning, message=".*LLM.*")
 warnings.filterwarnings("ignore", category=UserWarning, message=".*code injection.*")
 warnings.filterwarnings("ignore", category=UserWarning, message=".*XSS.*")
@@ -95,7 +104,7 @@ class ChatGenerator:
             # Get Azure OpenAI configuration from environment variables
             endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
             api_key = os.getenv("AZURE_OPENAI_API_KEY")
-            api_version = os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-01")
+            # api_version = os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-01")
             
             if not endpoint or not api_key:
                 print("Warning: Azure OpenAI credentials not found in environment variables.")
@@ -103,10 +112,9 @@ class ChatGenerator:
                 print("Using mock generation for now...")
                 return None
                 
-            return AzureOpenAI(
-                azure_endpoint=endpoint,
-                api_key=api_key,
-                api_version=api_version
+            return OpenAI(
+                base_url=endpoint,
+                api_key=api_key
             )
         except Exception as e:
             print(f"Error setting up Azure OpenAI: {e}")
@@ -138,20 +146,42 @@ class ChatGenerator:
             
             # Use the generated question for tool selection
             user_query = qa_pair["question"]
-            result = chat_tools.chat_with_agent(user_query)
-            
-            # Extract tool information
-            tool_used = result['tool_used']
-            qa_pair["tool_used"] = f" (CBS Service) {tool_used}"
-            qa_pair["parameters"] = result['parameters']
-            qa_pair["description"] = result['tool_description']
-            # qa_pair["answer"] = result['response']
-            qa_pair["tool_return"] = result.get('tool_return', 'No tool result available')
-            qa_pair["answer"] = self._generate_summary(qa_pair["answer"], qa_pair["tool_return"])
-            
-            # Track tools used
-            tools_used.add(tool_used)
-            tool_usage_count[tool_used] = tool_usage_count.get(tool_used, 0) + 1
+            if CHAT_TOOLS_AVAILABLE:
+                try:
+                    result = chat_tools.chat_with_agent(user_query)
+                    
+                    # Extract tool information
+                    tool_used = result['tool_used']
+                    qa_pair["tool_used"] = f" (CBS Service) {tool_used}"
+                    qa_pair["parameters"] = result['parameters']
+                    qa_pair["description"] = result['tool_description']
+                    qa_pair["tool_return"] = result.get('tool_return', 'No tool result available')
+                    qa_pair["answer"] = self._generate_summary(qa_pair["answer"], qa_pair["tool_return"])
+                    
+                    # Track tools used
+                    tools_used.add(tool_used)
+                    tool_usage_count[tool_used] = tool_usage_count.get(tool_used, 0) + 1
+                except Exception as e:
+                    print(f"Warning: Could not use chat_tools, using basic answer: {e}")
+                    # Fallback when chat_tools is not available
+                    qa_pair["tool_used"] = "general_inquiry"
+                    qa_pair["parameters"] = {"userQuery": user_query}
+                    qa_pair["description"] = "General financial inquiry"
+                    qa_pair["tool_return"] = "Chat tools not available"
+                    
+                    # Track fallback tool
+                    tools_used.add("general_inquiry")
+                    tool_usage_count["general_inquiry"] = tool_usage_count.get("general_inquiry", 0) + 1
+            else:
+                # Fallback when chat_tools is not available
+                qa_pair["tool_used"] = "general_inquiry"
+                qa_pair["parameters"] = {"userQuery": user_query}
+                qa_pair["description"] = "General financial inquiry"
+                qa_pair["tool_return"] = "Chat tools not available"
+                
+                # Track fallback tool
+                tools_used.add("general_inquiry")
+                tool_usage_count["general_inquiry"] = tool_usage_count.get("general_inquiry", 0) + 1
                         
             qa_pairs.append(qa_pair)
         
@@ -210,7 +240,15 @@ Format your response as JSON:
         
         # user_prompt = f"Generate a realistic customer question and professional response for this scenario: {topic}"
         user_prompt = topic  # Just use the topic as the user prompt for more open-ended generation
+        
+        # List of common deployment names to try
+        fallback_deployments = ["gpt-4o-mini", "gpt-35-turbo", "gpt-4", "gpt-4o","gpt-4o-mini-alvaz"]
+        
         try:
+            if not self.client:
+                print("Warning: Azure OpenAI client not available, using mock generation")
+                return self._generate_mock_qa(topic)
+
             response = self.client.chat.completions.create(
                 model=deployment_name,
                 messages=[
@@ -220,7 +258,7 @@ Format your response as JSON:
                 max_tokens=500,
                 temperature=0.8
             )
-            
+
             content = response.choices[0].message.content
             
             try:
@@ -253,8 +291,69 @@ Format your response as JSON:
                     "answer": answer or "I'd be happy to help you with your loan information."
                 }
                 
+        except openai.NotFoundError as nf_error:
+            print(f"Deployment '{deployment_name}' not found (404 error): {nf_error}")
+            print("Trying fallback deployment names...")
+            
+            # Try fallback deployment names
+            for fallback_name in fallback_deployments:
+                if fallback_name != deployment_name:  # Don't retry the same name
+                    try:
+                        print(f"Attempting with deployment: {fallback_name}")
+                        response = self.client.chat.completions.create(
+                            model=fallback_name,
+                            messages=[
+                                {"role": "system", "content": system_prompt},
+                                {"role": "user", "content": user_prompt}
+                            ],
+                            max_tokens=500,
+                            temperature=0.8
+                        )
+                        
+                        content = response.choices[0].message.content
+                        print(f"✅ Successfully used fallback deployment: {fallback_name}")
+                        
+                        try:
+                            # Try to parse JSON response
+                            qa_data = json.loads(content)
+                            # Replace SIN in question with generated random SIN
+                            if "question" in qa_data:
+                                # Use the SIN generation function from chat_tools
+                                qa_data["question"] = self._replace_sin_in_question(
+                                    qa_data["question"]
+                                )
+                            return {
+                                "question": qa_data.get("question", "Generated question"),
+                                "answer": qa_data.get("answer", "Generated answer")
+                            }
+                        except json.JSONDecodeError:
+                            # If not valid JSON, try to extract question and answer
+                            lines = content.strip().split('\n')
+                            question = ""
+                            answer = ""
+                            
+                            for line in lines:
+                                if '"question"' in line.lower() or 'question:' in line.lower():
+                                    question = line.split(':', 1)[-1].strip(' "')
+                                elif '"answer"' in line.lower() or 'answer:' in line.lower():
+                                    answer = line.split(':', 1)[-1].strip(' "')
+                            
+                            return {
+                                "question": question or "Could you help me with my loan inquiry?",
+                                "answer": answer or "I'd be happy to help you with your loan information."
+                            }
+                            
+                    except Exception as fallback_error:
+                        print(f"Fallback deployment '{fallback_name}' also failed: {fallback_error}")
+                        continue
+            
+            # If all fallbacks failed, use mock generation
+            print("All Azure OpenAI deployments failed, falling back to mock generation")
+            return self._generate_mock_qa(topic)
+                        
         except Exception as e:
             print(f"Error generating with OpenAI: {e}")
+            print(f"Client details: {self.client}")
             return self._generate_mock_qa(topic)
     
     def _generate_mock_qa(self, topic: str) -> Dict[str, str]:
@@ -312,7 +411,14 @@ Format your response as JSON:
         """
         import re
         # Use the SIN generation function from chat_tools
-        new_sin = chat_tools.generate_random_sin()
+        if CHAT_TOOLS_AVAILABLE:
+            try:
+                new_sin = chat_tools.generate_random_sin()
+            except Exception as e:
+                print(f"Warning: Could not generate random SIN, using default: {e}")
+                new_sin = "123-456-789"  # Fallback SIN
+        else:
+            new_sin = "123-456-789"  # Fallback SIN when chat_tools not available
         
         # Replace any existing SIN patterns with the new random SIN
         # SIN format: XXX-XXX-XXX or XXXXXXXXX
@@ -409,7 +515,7 @@ def get_tool_usage_summary(result: Dict[str, Any]) -> Dict[str, Any]:
 
 def main():
 
-    DEFAULT_NUMBER_OF_PAIRS = 15
+    DEFAULT_NUMBER_OF_PAIRS = 3
 
     """Main function with command line interface."""
     parser = argparse.ArgumentParser(description="Generate financial chat Q&A pairs using Azure OpenAI")
@@ -417,8 +523,8 @@ def main():
                        help=f'Number of Q&A pairs to generate (default: {DEFAULT_NUMBER_OF_PAIRS})')
     parser.add_argument('-t', '--topics-file', type=str, default='topics.json',
                        help='Path to topics JSON file (default: topics.json)')
-    parser.add_argument('-d', '--deployment', type=str, default='gpt-35-turbo',
-                       help='Azure OpenAI deployment name (default: gpt-35-turbo)')
+    parser.add_argument('-d', '--deployment', type=str, default='gpt-4o-mini-alvaz',
+                       help='Azure OpenAI deployment name (default: gpt-4o-mini-alvaz)')
     parser.add_argument('-o', '--output', type=str,
                        help='Save output to JSON file (optional)')
     parser.add_argument('--seed', type=int, help='Random seed for reproducible results')

@@ -134,4 +134,6 @@ if __name__ == '__main__':
     print("  GET /health - Health check")
     print("\nServer running at: http://localhost:5000")
     
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # Use DEBUG_MODE environment variable to control Flask debug mode
+    debug_mode = os.getenv("DEBUG_MODE", "false").lower() == "true"
+    app.run(host='0.0.0.0', port=5000, debug=debug_mode)

@@ -176,4 +176,6 @@ if __name__ == '__main__':
     print("  POST http://localhost:5000/run_new_caller")
     print("       Body: {'npairs': 10}")
     
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Use DEBUG_MODE environment variable to control Flask debug mode
+    debug_mode = os.getenv("DEBUG_MODE", "false").lower() == "true"
+    app.run(debug=debug_mode, host='0.0.0.0', port=5000)
