@@ -4,10 +4,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'app-root',
-  standalone: true,
-  imports: [CommonModule, HttpClientModule, FormsModule],
-  template: `
+    selector: 'app-root',
+    imports: [CommonModule, HttpClientModule, FormsModule],
+    template: `
     <div class="qa-generator-app">
       <header class="app-header">
         <h1>🚀 Q&A Generator App</h1>
@@ -98,7 +97,7 @@ import { FormsModule } from '@angular/forms';
       </div>
     </div>
   `,
-  styles: [`
+    styles: [`
     .qa-generator-app {
       padding: 20px;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
