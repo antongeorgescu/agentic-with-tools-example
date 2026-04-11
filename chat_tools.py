@@ -180,6 +180,7 @@ def extract_sin_number(query: str, force_random: bool = None) -> str:
     
     if os.getenv("DEBUG_MODE", "false").lower() == "true":
         print(f"🎲 DEBUG: GENERATED random SIN: {sin}")
+    return sin
 
 def generate_random_sin() -> str:
     """Generate a random SIN in XXX-XXX-XXX format for testing."""
