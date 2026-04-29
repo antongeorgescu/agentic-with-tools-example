@@ -41,18 +41,23 @@ import { FormsModule } from '@angular/forms';
           <div class="qa-pair" *ngFor="let qa of qaResults; let i = index">
             <div class="qa-header">
               <strong>Pair {{ i + 1 }}</strong>
-              <span class="topic-badge">Topic: {{ qa.topic }}</span>
+              <span class="sin-badge" *ngIf="qa.sin_number && qa.sin_number !== 'N/A'">SIN: {{ qa.sin_number }}</span>
+              <span class="topic-badge"><span class="topic-num">Topic #{{ qa.topic_index }}</span><span class="topic-desc">{{ qa.topic }}</span></span>
             </div>
             <div class="qa-content">
               <div class="question-section">
                 <label>Question:</label>
-                <textarea readonly class="question-box">{{ qa.question }}</textarea>
+                <div class="question-display">
+                  <ng-container *ngFor="let part of getQuestionParts(qa.question)">
+                    <span [class]="part.isSin ? 'sin-highlight' : 'regular-text'">{{ part.text }}</span>
+                  </ng-container>
+                </div>
               </div>
               <div class="answer-section">
                 <label>Answer:</label>
                 <div class="answer-display">
                   <ng-container *ngFor="let answerPart of getAnswerParts(qa.answer)">
-                    <span [class]="answerPart.isAccountInfo ? 'account-info-text' : 'regular-text'">{{ answerPart.text }}</span>
+                    <span [class]="answerPart.isSin ? 'sin-highlight' : answerPart.isAccountInfo ? 'account-info-text' : 'regular-text'">{{ answerPart.text }}</span>
                   </ng-container>
                 </div>
               </div>
@@ -214,11 +219,36 @@ import { FormsModule } from '@angular/forms';
     }
     
     .topic-badge {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 6px;
       background: #6f42c1;
       color: white;
-      padding: 4px 8px;
+      padding: 4px 10px;
       border-radius: 4px;
       font-size: 0.8em;
+      max-width: 100%;
+      flex-wrap: wrap;
+    }
+    .topic-num {
+      font-weight: 700;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .topic-desc {
+      font-weight: 400;
+      opacity: 0.88;
+    }
+
+    .sin-badge {
+      background: #856404;
+      color: #fff3cd;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.85em;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      border: 1px solid #ffc107;
     }
     
     .qa-content {
@@ -261,6 +291,27 @@ import { FormsModule } from '@angular/forms';
     
     .answer-box {
       border-left: 4px solid #28a745;
+    }
+
+    .question-display {
+      padding: 10px;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      min-height: 120px;
+      background: white;
+      font-family: inherit;
+      font-size: 14px;
+      border-left: 4px solid #007bff;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .sin-highlight {
+      background: #fff3cd;
+      color: #856404;
+      font-weight: 700;
+      border-radius: 3px;
+      padding: 0 2px;
     }
 
     .answer-display {
@@ -455,26 +506,77 @@ export class AppComponent {
     }
   }
 
-  getAnswerParts(answer: string): { text: string, isAccountInfo: boolean }[] {
-    if (!answer) return [{ text: '', isAccountInfo: false }];
-    
-    // Split the answer by "Based on your account information:"
-    const accountInfoMarker = 'Based on your account information:';
-    const parts = answer.split(accountInfoMarker);
-    
-    const result: { text: string, isAccountInfo: boolean }[] = [];
-    
-    // Add the part before "Based on your account information:"
-    if (parts[0]) {
-      result.push({ text: parts[0], isAccountInfo: false });
+  private readonly SIN_PATTERN = /\b(\d{3}-\d{3}-\d{3})\b/g;
+
+  /** Split text into segments, flagging SIN numbers for highlighting. */
+  private splitBySin(text: string): { text: string; isSin: boolean; isAccountInfo: boolean }[] {
+    const result: { text: string; isSin: boolean; isAccountInfo: boolean }[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+    this.SIN_PATTERN.lastIndex = 0;
+    while ((match = this.SIN_PATTERN.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        result.push({ text: text.slice(lastIndex, match.index), isSin: false, isAccountInfo: false });
+      }
+      result.push({ text: match[0], isSin: true, isAccountInfo: false });
+      lastIndex = match.index + match[0].length;
     }
-    
-    // Add "Based on your account information:" part and the rest
-    if (parts.length > 1) {
-      result.push({ text: accountInfoMarker, isAccountInfo: true });
-      result.push({ text: parts[1], isAccountInfo: false });
+    if (lastIndex < text.length) {
+      result.push({ text: text.slice(lastIndex), isSin: false, isAccountInfo: false });
     }
-    
+    return result;
+  }
+
+  getQuestionParts(question: string): { text: string; isSin: boolean; isAccountInfo: boolean }[] {
+    if (!question) return [{ text: '', isSin: false, isAccountInfo: false }];
+    return this.splitBySin(question);
+  }
+
+  getAnswerParts(answer: string): { text: string; isSin: boolean; isAccountInfo: boolean }[] {
+    if (!answer) return [{ text: '', isSin: false, isAccountInfo: false }];
+
+    const result: { text: string; isSin: boolean; isAccountInfo: boolean }[] = [];
+
+    // Unified answer format: intro sentence | findings section | closing sentence
+    const findingsMarker = 'here is a comprehensive overview of the findings:';
+    const closingMarker = 'Please do not hesitate';
+
+    const findingsIdx = answer.indexOf(findingsMarker);
+
+    if (findingsIdx === -1) {
+      // Fallback for legacy / plain-text answers — just highlight SINs
+      return this.splitBySin(answer);
+    }
+
+    const introText   = answer.slice(0, findingsIdx + findingsMarker.length);
+    const remainder   = answer.slice(findingsIdx + findingsMarker.length);
+    const closingIdx  = remainder.indexOf(closingMarker);
+    const findingsText = closingIdx !== -1 ? remainder.slice(0, closingIdx) : remainder;
+    const closingText  = closingIdx !== -1 ? remainder.slice(closingIdx) : '';
+
+    // Intro — regular styling with SIN highlighting
+    result.push(...this.splitBySin(introText));
+
+    // Findings — account-info styling (blue/bold) with SIN highlighting
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+    this.SIN_PATTERN.lastIndex = 0;
+    while ((match = this.SIN_PATTERN.exec(findingsText)) !== null) {
+      if (match.index > lastIndex) {
+        result.push({ text: findingsText.slice(lastIndex, match.index), isSin: false, isAccountInfo: true });
+      }
+      result.push({ text: match[0], isSin: true, isAccountInfo: true });
+      lastIndex = match.index + match[0].length;
+    }
+    if (lastIndex < findingsText.length) {
+      result.push({ text: findingsText.slice(lastIndex), isSin: false, isAccountInfo: true });
+    }
+
+    // Closing — regular styling with SIN highlighting
+    if (closingText) {
+      result.push(...this.splitBySin(closingText));
+    }
+
     return result;
   }
 
@@ -485,28 +587,31 @@ export class AppComponent {
         // Open new window and display raw response
         const newWindow = window.open('', '_blank');
         if (newWindow) {
+          const topics: string[] = response?.topics || [];
+          const rows = topics
+            .map((t: string, i: number) => `<tr><td class="idx">#${i + 1}</td><td>${t}</td></tr>`)
+            .join('');
           newWindow.document.write(`
             <html>
               <head>
-                <title>List Topics - Raw Response</title>
+                <title>List Topics</title>
                 <style>
-                  body {
-                    font-family: 'Courier New', monospace;
-                    padding: 20px;
-                    background-color: #f5f5f5;
-                  }
-                  pre {
-                    background-color: #ffffff;
-                    border: 1px solid #ddd;
-                    border-radius: 4px;
-                    padding: 15px;
-                    overflow: auto;
-                  }
+                  body { font-family: 'Segoe UI', Arial, sans-serif; padding: 24px; background: #f5f5f5; }
+                  h1 { font-size: 1.3em; margin-bottom: 16px; color: #4a2c8a; }
+                  table { border-collapse: collapse; width: 100%; background: #fff; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+                  th { background: #6f42c1; color: #fff; padding: 10px 14px; text-align: left; font-size: .9em; }
+                  td { padding: 9px 14px; border-bottom: 1px solid #eee; font-size: .9em; vertical-align: top; }
+                  td.idx { width: 60px; font-weight: 700; color: #6f42c1; white-space: nowrap; }
+                  tr:last-child td { border-bottom: none; }
+                  tr:hover td { background: #f3eeff; }
                 </style>
               </head>
               <body>
-                <h1>List Topics - Raw Response</h1>
-                <pre>${JSON.stringify(response, null, 2)}</pre>
+                <h1>Topics List (${topics.length} topics)</h1>
+                <table>
+                  <thead><tr><th>#</th><th>Topic description</th></tr></thead>
+                  <tbody>${rows}</tbody>
+                </table>
               </body>
             </html>
           `);

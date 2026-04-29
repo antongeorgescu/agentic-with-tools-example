@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 export interface QAPair {
   question: string;
   answer: string;
+  sin_number?: string;
   tool_used?: string;
   tool_description?: string;
 }

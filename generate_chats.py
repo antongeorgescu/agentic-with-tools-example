@@ -146,6 +146,20 @@ class ChatGenerator:
             
             # Use the generated question for tool selection
             user_query = qa_pair["question"]
+
+            # Extract SIN explicitly from the question for traceability
+            sin_number = None
+            if CHAT_TOOLS_AVAILABLE:
+                try:
+                    sin_number = chat_tools.extract_sin_number(user_query)
+                except Exception:
+                    pass
+            if not sin_number:
+                import re
+                m = re.search(r'\b(\d{3}-\d{3}-\d{3})\b', user_query)
+                sin_number = m.group(1) if m else "N/A"
+            qa_pair["sin_number"] = sin_number
+
             if CHAT_TOOLS_AVAILABLE:
                 try:
                     result = chat_tools.chat_with_agent(user_query)
@@ -156,7 +170,7 @@ class ChatGenerator:
                     qa_pair["parameters"] = result['parameters']
                     qa_pair["description"] = result['tool_description']
                     qa_pair["tool_return"] = result.get('tool_return', 'No tool result available')
-                    qa_pair["answer"] = self._generate_summary(qa_pair["answer"], qa_pair["tool_return"])
+                    qa_pair["answer"] = self._generate_summary(qa_pair["answer"], qa_pair["tool_return"], sin_number)
                     
                     # Track tools used
                     tools_used.add(tool_used)
@@ -358,45 +372,109 @@ Format your response as JSON:
     
     def _generate_mock_qa(self, topic: str) -> Dict[str, str]:
         """Generate mock Q&A pair when OpenAI is not available."""
-        # Simple template-based generation as fallback
-        question_templates = [
-            "Can you help me understand about {}?",
-            "I have a question regarding {}.",
-            "Could you provide information on {}?",
-            "I need assistance with {}."
-        ]
-        
-        question = random.choice(question_templates).format(topic.lower())
-        answer = f"I'd be happy to help you with your inquiry about {topic.lower()}. Let me provide you with the relevant information and options available to you."
-        
+        # Map each topic to the most appropriate tool query type
+        topic_lower = topic.lower()
+
+        if any(k in topic_lower for k in ["lump-sum", "lump sum", "prepay", "prepayment", "annually", "extra payment", "ird", "interest rate differential"]):
+            query_type = "lump_sum"
+        elif any(k in topic_lower for k in ["increase the payment", "increase payment", "shorten", "extend", "amortization"]):
+            query_type = "payment_increase"
+        elif any(k in topic_lower for k in ["balance", "final payment date", "payment date"]):
+            query_type = "balance"
+        elif any(k in topic_lower for k in ["interest rate", "fixed vs", "variable rate", "rate\u2011lock", "rate-lock", "promotional rate", "total interest"]):
+            query_type = "rates"
+        elif any(k in topic_lower for k in ["unable to make", "penalties and repercussions", "miss"]):
+            query_type = "missed_payment"
+        elif any(k in topic_lower for k in ["pre\u2011approval", "pre-approval", "preapproval"]):
+            query_type = "pre_approval"
+        elif any(k in topic_lower for k in ["next steps after", "application", "document submission", "income verification"]):
+            query_type = "application"
+        elif any(k in topic_lower for k in ["refinanc", "end of", "renewal", "new rate offers", "debt consolidation", "home equity", "home renovation"]):
+            query_type = "refinance"
+        elif any(k in topic_lower for k in ["hardship", "financial difficulties", "financial difficulty", "deferral", "temporary financial"]):
+            query_type = "hardship"
+        elif any(k in topic_lower for k in ["insurance", "escrow", "property tax", "home insurance"]):
+            query_type = "insurance"
+        else:
+            query_type = "balance"  # safe default
+
+        # Generate a realistic, detailed question with embedded SIN and name
+        if CHAT_TOOLS_AVAILABLE:
+            try:
+                question = chat_tools.generate_query_with_random_sin(query_type)
+            except Exception:
+                name = chat_tools.generate_random_name()
+                sin = chat_tools.generate_random_sin()
+                question = f"My name is {name} and my SIN is {sin}. I need assistance with {topic.lower()}."
+        else:
+            question = f"I need assistance with {topic.lower()}."
+
+        answer = f"I would be happy to help you with your inquiry about {topic.lower()}. Let me review your account details and provide you with the relevant information and all available options."
+
         return {"question": question, "answer": answer}
     
-    def _generate_summary(self, original_answer: str, tool_return: str) -> str:
+    def _generate_summary(self, original_answer: str, tool_return: str, sin_number: str = None) -> str:
         """
-        Generate a comprehensive summary combining the original answer with tool results.
-        
+        Generate a single, smooth, detail-rich answer that weaves the original context
+        together with the tool results into one cohesive paragraph.
+
         Args:
             original_answer: The original AI-generated answer
             tool_return: The result from the tool execution
-            
+            sin_number: The SIN extracted from the question (optional override)
+
         Returns:
-            str: Combined answer incorporating both the original response and tool data
+            str: A unified answer incorporating both the original response and tool data
         """
         if not tool_return or tool_return == "No tool result available":
             return original_answer
-        
-        # Extract the tool prefix and data from the tool return
-        # Format: "TOOLCODE: Detailed information..."
+
+        import re
+
+        # Prefer the explicitly passed SIN; fall back to extracting from tool_return
+        if not sin_number or sin_number == "N/A":
+            sin_match = re.search(r'\[SIN:\s*([\d\-]+)\]', tool_return)
+            sin_number = sin_match.group(1) if sin_match else None
+
+        # Split tool code from the detail text
         if ":" in tool_return:
             tool_code, tool_data = tool_return.split(":", 1)
+            tool_code = tool_code.strip()
             tool_data = tool_data.strip()
-            
-            # Create a comprehensive response combining both
-            summary = f"{original_answer}\n\nBased on your account information: {tool_data}"
         else:
-            # If no specific formatting, just append the tool result
-            summary = f"{original_answer}\n\nAccount details: {tool_return}"
-        
+            tool_code = "INFO"
+            tool_data = tool_return
+
+        # Remove the embedded [SIN: xxx] marker — the SIN is surfaced in the intro
+        tool_data = re.sub(r'\[SIN:\s*[\d\-]+\]\s*', '', tool_data).strip()
+
+        # Tool-specific review labels used in the opening sentence
+        topic_labels = {
+            "BALNC": "a full account balance review",
+            "PAYUP": "a payment increase scenario analysis",
+            "LUMPD": "a lump-sum prepayment assessment",
+            "RATES": "a comprehensive interest rate review",
+            "MISPY": "a missed payment impact assessment",
+            "PREAP": "a mortgage pre-approval eligibility assessment",
+            "APPLI": "a mortgage application status review",
+            "REFIN": "a refinancing and renewal options analysis",
+            "HRDSH": "a financial hardship program evaluation",
+            "INSUR": "a mortgage insurance and escrow review",
+        }
+        topic_label = topic_labels.get(tool_code, "a detailed account review")
+
+        # Extract the topic hint from the generic original_answer to add context
+        # e.g. "...your inquiry about lump-sum payments..."  -> "lump-sum payments"
+        topic_hint_match = re.search(r'inquiry about (.+?)\.', original_answer, re.IGNORECASE)
+        topic_hint = topic_hint_match.group(1).strip() if topic_hint_match else "your mortgage account"
+
+        summary = (
+            f"Thank you for reaching out regarding {topic_hint}. "
+            f"After completing {topic_label}, "
+            f"here is a comprehensive overview of the findings: {tool_data} "
+            f"Please do not hesitate to contact us if you have any further questions or "
+            f"would like to explore additional options related to your account."
+        )
         return summary
 
     def _replace_sin_in_question(self, question: str) -> str:
